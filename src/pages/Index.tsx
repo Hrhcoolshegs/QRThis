@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { QRGenerator } from '@/components/QRGenerator';
+import { ComingSoon } from '@/components/ComingSoon';
 
 function QRThisApp() {
   return (
@@ -213,6 +213,9 @@ function QRThisApp() {
             </div>
           </div>
         </section>
+
+        {/* Coming Soon Section */}
+        <ComingSoon />
       </main>
 
       {/* Footer */}
