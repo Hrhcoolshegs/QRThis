@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
@@ -212,8 +213,8 @@ export function QRGenerator() {
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-bold mb-3 text-white">Create Your AI-Powered QR Code</h2>
-            <p className="text-gray-300 text-lg">
+            <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Create Your AI-Powered QR Code</h2>
+            <p className="text-gray-700 dark:text-gray-300 text-lg">
               Enter any text, URL, or data below, or let our AI assistant guide you
             </p>
           </div>
@@ -224,7 +225,7 @@ export function QRGenerator() {
           </div>
 
           {/* Input Card */}
-          <Card className="shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50">
+          <Card className="shadow-lg border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800/50">
             <CardContent className="p-8">
               <div className="space-y-6">
                 <div className="relative">
@@ -232,10 +233,10 @@ export function QRGenerator() {
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
                     placeholder="Enter text, URL, WiFi password, contact info, or let AI help you..."
-                    className="w-full min-h-[200px] p-6 border-2 border-gray-600/20 rounded-xl resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-300 text-lg leading-relaxed bg-gray-900/50 backdrop-blur-sm text-white placeholder-gray-400"
+                    className="w-full min-h-[200px] p-6 border-2 border-gray-200 dark:border-gray-600/20 rounded-xl resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-300 text-lg leading-relaxed bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     autoFocus
                   />
-                  <div className="absolute bottom-4 right-4 bg-gray-800/80 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <div className="absolute bottom-4 right-4 bg-gray-100 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg px-3 py-1">
                     <EnhancedCharacterCounter count={characterCount} maxCount={MAX_CHARACTERS} />
                   </div>
                 </div>
@@ -265,17 +266,17 @@ export function QRGenerator() {
 
           {/* Feature Highlights */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-900/20 border border-green-700/50 backdrop-blur-sm">
-              <Shield className="w-5 h-5 text-green-400" />
-              <span className="text-sm font-medium text-green-300">Private & Secure</span>
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50">
+              <Shield className="w-5 h-5 text-green-600 dark:text-green-400" />
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">Private & Secure</span>
             </div>
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-900/20 border border-blue-700/50 backdrop-blur-sm">
-              <Zap className="w-5 h-5 text-blue-400" />
-              <span className="text-sm font-medium text-blue-300">AI-Powered</span>
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50">
+              <Zap className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-700 dark:text-blue-300">AI-Powered</span>
             </div>
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-900/20 border border-purple-700/50 backdrop-blur-sm">
-              <Smartphone className="w-5 h-5 text-purple-400" />
-              <span className="text-sm font-medium text-purple-300">Mobile Ready</span>
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700/50">
+              <Smartphone className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm font-medium text-purple-700 dark:text-purple-300">Mobile Ready</span>
             </div>
           </div>
         </div>
@@ -283,21 +284,21 @@ export function QRGenerator() {
         {/* Output Section - Right Side */}
         <div className="space-y-8">
           <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-bold mb-3 text-white">Your AI-Optimized QR Code</h2>
-            <p className="text-gray-300 text-lg">
+            <h2 className="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Your AI-Optimized QR Code</h2>
+            <p className="text-gray-700 dark:text-gray-300 text-lg">
               Ready to download and share with the world
             </p>
           </div>
 
           {/* QR Code Display */}
-          <Card className="shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 min-h-[500px] flex items-center justify-center">
+          <Card className="shadow-lg border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800/50 min-h-[500px] flex items-center justify-center">
             <CardContent className="p-8 w-full">
               {error ? (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
                     <span className="text-2xl">⚠️</span>
                   </div>
-                  <p className="text-red-400 text-lg font-medium">{error}</p>
+                  <p className="text-red-600 dark:text-red-400 text-lg font-medium">{error}</p>
                 </div>
               ) : !inputText.trim() ? (
                 <div className="text-center space-y-6 py-12">
@@ -305,8 +306,8 @@ export function QRGenerator() {
                     <div className="w-12 h-12 border-4 border-dashed border-blue-400/40 rounded-lg"></div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-white">Ready to generate</h3>
-                    <p className="text-gray-400">Enter some text on the left or ask our AI assistant for help</p>
+                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">Ready to generate</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Enter some text on the left or ask our AI assistant for help</p>
                   </div>
                 </div>
               ) : isGenerating ? (
@@ -315,8 +316,8 @@ export function QRGenerator() {
                     <Loader2 className="w-8 h-8 text-white animate-spin" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2 text-white">AI creating your QR code</h3>
-                    <p className="text-gray-400">Optimizing for best scan results...</p>
+                    <h3 className="text-xl font-semibold mb-2 text-gray-900 dark:text-white">AI creating your QR code</h3>
+                    <p className="text-gray-600 dark:text-gray-400">Optimizing for best scan results...</p>
                   </div>
                 </div>
               ) : qrCodeDataURL ? (
@@ -333,7 +334,7 @@ export function QRGenerator() {
                       <Download className="w-5 h-5 mr-2" />
                       Download AI-Optimized PNG
                     </Button>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       Right-click the QR code above to save directly, or use the download button
                     </p>
                   </div>
