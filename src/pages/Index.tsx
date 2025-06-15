@@ -25,7 +25,7 @@ function QRThisApp() {
       </header>
 
       <main className="container max-w-7xl mx-auto px-4">
-        {/* Hero Section - Completely Redesigned */}
+        {/* Hero Section - Simplified */}
         <section className="py-20 text-center">
           <div className="max-w-4xl mx-auto space-y-8">
             <div className="space-y-6">
@@ -38,25 +38,8 @@ function QRThisApp() {
               </h1>
               
               <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                The fastest, most beautiful QR code generator. 
-                <br className="hidden md:block" />
-                <span className="font-semibold text-foreground">Type anything. Get your QR code. Done.</span>
+                The fastest, most beautiful QR code generator for all your needs.
               </p>
-              
-              <div className="flex items-center justify-center space-x-8 text-sm text-muted-foreground">
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span>No signup required</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span>Privacy first</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
-                  <span>Lightning fast</span>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -161,40 +144,67 @@ function QRThisApp() {
           </div>
         </section>
 
-        {/* FAQ - Improved Layout */}
+        {/* Smart FAQ - Interactive Design */}
         <section className="py-20">
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
-              <p className="text-lg text-muted-foreground">Everything you need to know about QRThis</p>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Common questions</h2>
+              <p className="text-lg text-muted-foreground">Get answers instantly</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[
                 {
-                  question: 'Is QRThis really completely free?',
-                  answer: 'Yes, absolutely. No hidden costs, no premium tiers, no feature limitations. Generate unlimited QR codes forever.'
+                  icon: '💰',
+                  question: 'Is it free?',
+                  answer: 'Yes, completely free with no limits.',
+                  category: 'pricing'
                 },
                 {
-                  question: 'Do you store or collect my data?',
-                  answer: 'Never. Everything happens locally in your browser. We have zero tracking, zero analytics, zero data collection.'
+                  icon: '🔐',
+                  question: 'Is my data safe?',
+                  answer: 'Everything stays in your browser. We never see your data.',
+                  category: 'privacy'
                 },
                 {
-                  question: 'What types of content can I encode?',
-                  answer: 'Anything! URLs, text, WiFi credentials, contact info, social media links, or any custom content up to 2000 characters.'
+                  icon: '📱',
+                  question: 'Works on mobile?',
+                  answer: 'Perfectly optimized for all devices.',
+                  category: 'compatibility'
                 },
                 {
-                  question: 'How do I know my QR codes will scan reliably?',
-                  answer: 'We use optimal error correction and provide real-time scan reliability indicators based on your content length and complexity.'
+                  icon: '⚡',
+                  question: 'How fast is it?',
+                  answer: 'QR codes generate instantly as you type.',
+                  category: 'performance'
                 },
                 {
-                  question: 'Can I use this on mobile devices?',
-                  answer: 'Absolutely. QRThis is designed mobile-first and works perfectly on phones, tablets, and any device with a modern browser.'
+                  icon: '📏',
+                  question: 'Character limit?',
+                  answer: '2000 characters - enough for most use cases.',
+                  category: 'limits'
+                },
+                {
+                  icon: '🎨',
+                  question: 'Can I customize?',
+                  answer: 'Standard black & white for maximum compatibility.',
+                  category: 'customization'
                 }
               ].map((faq, index) => (
-                <div key={index} className="bg-card border border-border/50 rounded-2xl p-8 hover:border-border transition-all duration-200 hover:shadow-lg">
-                  <h3 className="text-xl font-semibold mb-4 text-primary">{faq.question}</h3>
-                  <p className="text-muted-foreground leading-relaxed text-lg">{faq.answer}</p>
+                <div key={index} className="group bg-card border border-border/50 rounded-2xl p-6 hover:border-border transition-all duration-300 hover:scale-105 hover:shadow-lg">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-br from-primary/10 to-secondary/10 rounded-xl flex items-center justify-center text-xl flex-shrink-0 group-hover:from-primary/20 group-hover:to-secondary/20 transition-all duration-300">
+                      {faq.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold mb-2 text-primary group-hover:text-primary/80 transition-colors">
+                        {faq.question}
+                      </h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        {faq.answer}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
