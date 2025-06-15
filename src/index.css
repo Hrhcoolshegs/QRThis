@@ -5,65 +5,65 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 215 25% 27%;
+    --background: 0 0% 98%;
+    --foreground: 224 71% 4%;
 
     --card: 0 0% 100%;
-    --card-foreground: 215 25% 27%;
+    --card-foreground: 224 71% 4%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 27%;
+    --popover-foreground: 224 71% 4%;
 
-    --primary: 214 100% 40%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
 
-    --secondary: 158 64% 52%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 84% 4.9%;
 
-    --muted: 220 14% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 46.9%;
 
-    --accent: 220 14% 96%;
-    --accent-foreground: 215 25% 27%;
+    --accent: 210 40% 96%;
+    --accent-foreground: 222 84% 4.9%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 214 100% 40%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 221 83% 53%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 0 0% 0%;
-    --foreground: 220 14% 96%;
+    --background: 0 0% 3.9%;
+    --foreground: 210 40% 98%;
 
-    --card: 217 33% 8%;
-    --card-foreground: 220 14% 96%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 210 40% 98%;
 
-    --popover: 217 33% 8%;
-    --popover-foreground: 220 14% 96%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 210 40% 98%;
 
-    --primary: 213 93% 68%;
-    --primary-foreground: 0 0% 0%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 84% 4.9%;
 
-    --secondary: 158 64% 52%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 217 32% 17.5%;
+    --secondary-foreground: 210 40% 98%;
 
-    --muted: 217 33% 15%;
-    --muted-foreground: 217 10% 65%;
+    --muted: 217 32% 17.5%;
+    --muted-foreground: 215 20% 65%;
 
-    --accent: 217 33% 15%;
-    --accent-foreground: 220 14% 96%;
+    --accent: 217 32% 17.5%;
+    --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217 33% 15%;
-    --input: 217 33% 15%;
-    --ring: 213 93% 68%;
+    --border: 217 32% 17.5%;
+    --input: 217 32% 17.5%;
+    --ring: 217 91% 60%;
   }
 }
 
@@ -102,7 +102,7 @@
   }
   
   .animate-gradient-x {
-    animation: gradient-x 3s ease infinite;
+    animation: gradient-x 4s ease infinite;
     background-size: 200% 200%;
   }
   
@@ -115,21 +115,51 @@
     }
   }
 
-  /* Light/Dark theme enhancements */
+  /* Enhanced light/dark theme styling */
   .ai-glow {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+    transition: box-shadow 0.3s ease;
   }
   
   .ai-glow:hover {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.25);
   }
 
   .light .ai-glow {
-    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
   }
   
   .light .ai-glow:hover {
-    box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 8px 30px rgba(59, 130, 246, 0.2);
+  }
+
+  /* Beautiful light mode enhancements */
+  .light-gradient-bg {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  }
+
+  .light-card {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+  }
+
+  .light-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+  }
+
+  .light-feature-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.5);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  }
+
+  .light-feature-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
   }
 
   /* Security-focused utilities */
@@ -151,5 +181,17 @@
     -ms-user-select: none;
     user-select: none;
     pointer-events: none;
+  }
+
+  /* Beautiful gradients for light mode */
+  .hero-gradient-light {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .feature-icon-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
   }
 }
