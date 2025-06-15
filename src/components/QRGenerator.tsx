@@ -9,6 +9,127 @@ import { useToast } from '@/hooks/use-toast';
 const MAX_CHARACTERS = 2000;
 const DEBOUNCE_DELAY = 300;
 
+// Character limit status helper
+function getCharacterLimitStatus(count: number) {
+  if (count <= 500) return { color: 'text-green-600', warning: false, message: '' };
+  if (count <= 700) return { 
+    color: 'text-yellow-600', 
+    warning: true, 
+    message: 'Large QR codes may be harder to scan' 
+  };
+  if (count <= 800) return { 
+    color: 'text-orange-600', 
+    warning: true, 
+    message: 'Very large - may not scan reliably' 
+  };
+  return { 
+    color: 'text-red-600', 
+    warning: true, 
+    message: 'Too large - scanning not guaranteed' 
+  };
+}
+
+// Scan reliability indicator component
+function ScanReliabilityIndicator({ characterCount }: { characterCount: number }) {
+  const getReliability = (count: number) => {
+    if (count <= 300) return { level: 'Excellent', color: 'bg-green-500', percentage: 98 };
+    if (count <= 500) return { level: 'Very Good', color: 'bg-green-400', percentage: 92 };
+    if (count <= 700) return { level: 'Good', color: 'bg-yellow-400', percentage: 80 };
+    if (count <= 800) return { level: 'Fair', color: 'bg-orange-400', percentage: 65 };
+    return { level: 'Poor', color: 'bg-red-400', percentage: 40 };
+  };
+  
+  const reliability = getReliability(characterCount);
+  
+  if (characterCount < 300) return null;
+  
+  return (
+    <div className="mt-2 p-2 bg-gray-50 dark:bg-gray-800 rounded text-sm">
+      <div className="flex items-center gap-2">
+        <div className={`w-2 h-2 rounded-full ${reliability.color}`}></div>
+        <span>Scan Reliability: {reliability.level} (~{reliability.percentage}%)</span>
+      </div>
+    </div>
+  );
+}
+
+// Smart recommendations component
+function SmartRecommendations({ text, characterCount }: { text: string; characterCount: number }) {
+  const recommendations = [];
+  
+  if (characterCount > 700) {
+    if (text.includes('http://')) {
+      recommendations.push('💡 Use HTTPS instead of HTTP to save characters');
+    }
+    if (text.includes('www.')) {
+      recommendations.push('💡 Remove "www." to save characters');
+    }
+    if (text.includes('  ')) {
+      recommendations.push('💡 Remove extra spaces to save characters');
+    }
+  }
+  
+  if (recommendations.length === 0) return null;
+  
+  return (
+    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+      <div className="text-sm text-blue-800 dark:text-blue-200">
+        <div className="font-medium mb-1">Optimization Tips:</div>
+        {recommendations.map((tip, i) => (
+          <div key={i} className="text-xs">{tip}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Enhanced character counter component
+function EnhancedCharacterCounter({ count, maxCount = 2000 }: { count: number; maxCount?: number }) {
+  const status = getCharacterLimitStatus(count);
+  
+  return (
+    <div className="flex items-center justify-between text-sm">
+      <div className={`transition-colors ${status.color}`}>
+        {count}/{maxCount} characters
+      </div>
+      {status.warning && (
+        <div className={`text-xs ${status.color} flex items-center gap-1`}>
+          <span>⚠️</span>
+          <span>{status.message}</span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Optimized QR display component
+function OptimizedQRDisplay({ qrDataURL, characterCount }: { qrDataURL: string; characterCount: number }) {
+  const getOptimalSize = (count: number) => {
+    if (count <= 300) return 256;
+    if (count <= 500) return 288;
+    if (count <= 700) return 320;
+    return 352;
+  };
+  
+  const size = getOptimalSize(characterCount);
+  
+  return (
+    <div className="qr-container">
+      <img 
+        src={qrDataURL} 
+        alt="Generated QR Code"
+        style={{ 
+          width: `${size}px`, 
+          height: `${size}px`,
+          imageRendering: 'pixelated'
+        }}
+        className="border border-gray-200 dark:border-gray-700 rounded max-w-full"
+      />
+      <ScanReliabilityIndicator characterCount={characterCount} />
+    </div>
+  );
+}
+
 export function QRGenerator() {
   const [inputText, setInputText] = useState('');
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
@@ -33,14 +154,17 @@ export function QRGenerator() {
     setError(null);
 
     try {
+      // Enhanced QR generation with better settings
       const dataURL = await QRCode.toDataURL(text, {
-        width: 256,
+        errorCorrectionLevel: 'M',
+        type: 'image/png',
+        quality: 0.92,
         margin: 2,
         color: {
           dark: '#000000',
           light: '#FFFFFF'
         },
-        errorCorrectionLevel: 'M'
+        width: 512 // Generate at high res, display optimally
       });
       setQrCodeDataURL(dataURL);
     } catch (err) {
@@ -93,10 +217,12 @@ export function QRGenerator() {
                 autoFocus
                 aria-label="Text input for QR code generation"
               />
-              <div className={`absolute bottom-3 right-3 text-sm ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
-                {characterCount}/{MAX_CHARACTERS} characters
+              <div className="absolute bottom-3 right-3">
+                <EnhancedCharacterCounter count={characterCount} maxCount={MAX_CHARACTERS} />
               </div>
             </div>
+            
+            <SmartRecommendations text={inputText} characterCount={characterCount} />
             
             <Button
               onClick={() => generateQRCode(inputText)}
@@ -138,12 +264,7 @@ export function QRGenerator() {
           <CardContent className="p-6">
             <div className="text-center space-y-4">
               <div className="bg-white p-4 rounded-lg inline-block shadow-soft">
-                <img
-                  src={qrCodeDataURL}
-                  alt="Generated QR Code"
-                  className="w-64 h-64 max-w-full"
-                  onContextMenu={(e) => e.preventDefault()}
-                />
+                <OptimizedQRDisplay qrDataURL={qrCodeDataURL} characterCount={characterCount} />
               </div>
               
               <div className="space-y-2">
