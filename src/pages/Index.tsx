@@ -1,33 +1,13 @@
 
 import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
-import { ThemeToggle } from '@/components/ThemeToggle';
+import { Navigation } from '@/components/Navigation';
 import { QRGenerator } from '@/components/QRGenerator';
 
 function QRThisApp() {
   return (
     <div className="min-h-screen bg-white dark:bg-gradient-to-br dark:from-gray-900 dark:via-black dark:to-gray-800 transition-all duration-500">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 dark:bg-black/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/40 shadow-sm">
-        <div className="container max-w-7xl mx-auto px-4 py-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-sm">
-                <span className="text-white font-bold text-lg">Q</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
-                  QRThis
-                </h1>
-                <span className="text-xs bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-2 py-1 rounded-full font-semibold">
-                  AI-POWERED
-                </span>
-              </div>
-            </div>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <Navigation />
 
       <main className="container max-w-7xl mx-auto px-4">
         {/* Hero Section */}
@@ -68,6 +48,13 @@ function QRThisApp() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
               {
+                icon: '✨',
+                title: 'AI Art QR Codes',
+                description: 'Transform QR codes into stunning artwork while maintaining perfect scannability.',
+                color: 'from-purple-500 to-pink-500',
+                isPremium: true
+              },
+              {
                 icon: '🤖',
                 title: 'Smart Batch Processing',
                 description: 'Process multiple URLs, contacts, or text items automatically with AI separation.',
@@ -92,12 +79,6 @@ function QRThisApp() {
                 color: 'from-orange-500 to-red-500'
               },
               {
-                icon: '✨',
-                title: 'Crystal Clear',
-                description: 'AI-optimized codes that scan perfectly every time.',
-                color: 'from-pink-500 to-rose-500'
-              },
-              {
                 icon: '🚀',
                 title: 'No Limits',
                 description: 'Generate unlimited QR codes with AI guidance. Free forever.',
@@ -105,7 +86,14 @@ function QRThisApp() {
               }
             ].map((feature, index) => (
               <div key={index} className="group">
-                <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-2xl p-8 hover:shadow-md dark:hover:shadow-xl transition-all duration-300">
+                <div className="bg-white dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700/50 rounded-2xl p-8 hover:shadow-md dark:hover:shadow-xl transition-all duration-300 relative">
+                  {feature.isPremium && (
+                    <div className="absolute top-4 right-4">
+                      <span className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                        PRO
+                      </span>
+                    </div>
+                  )}
                   <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-sm`}>
                     {feature.icon}
                   </div>

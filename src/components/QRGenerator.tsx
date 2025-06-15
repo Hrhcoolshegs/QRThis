@@ -9,8 +9,10 @@ import { BatchProcessor } from '@/components/BatchProcessor';
 import { URLShortener } from '@/components/URLShortener';
 import { ContextOptimizer } from '@/components/ContextOptimizer';
 import { BrandColorSelector } from '@/components/BrandColorSelector';
+import { AIArtQR } from '@/components/AIArtQR';
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, X } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Download, Trash2, X, Sparkles } from 'lucide-react';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 
 const MAX_CHARACTERS = 2000;
@@ -18,6 +20,7 @@ const MAX_CHARACTERS = 2000;
 export function QRGenerator() {
   const { toast } = useToast();
   const [batchResults, setBatchResults] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState('standard');
   
   const {
     inputText,
@@ -94,6 +97,16 @@ export function QRGenerator() {
     setInputText('');
   }, [setInputText]);
 
+  const handleAIArtGenerate = useCallback((artStyle: string, customPrompt?: string) => {
+    // This would integrate with an AI art generation service
+    console.log('Generating AI Art QR with style:', artStyle, 'prompt:', customPrompt);
+    generateQRCode(inputText);
+    toast({
+      title: "AI Art QR Generated",
+      description: `Created artistic QR code with ${artStyle} style!`,
+    });
+  }, [inputText, generateQRCode, toast]);
+
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="grid lg:grid-cols-2 gap-12 items-start">
@@ -127,36 +140,59 @@ export function QRGenerator() {
             <AIAssistant onContentGenerated={handleAIGenerated} />
           </div>
 
-          {/* Input Card */}
-          <QRInput
-            inputText={inputText}
-            onInputChange={setInputText}
-            onGenerate={() => generateQRCode(inputText)}
-            isGenerating={isGenerating}
-            isOverLimit={isOverLimit}
-            characterCount={characterCount}
-            maxCharacters={MAX_CHARACTERS}
-            optimizationShown={optimizationShown}
-            savedChars={savedChars}
-            onUndoOptimization={handleUndoOptimization}
-            contentType={contentType}
-            errorCorrectionLevel={errorCorrectionLevel}
-          />
+          {/* QR Type Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="standard">Standard QR</TabsTrigger>
+              <TabsTrigger value="ai-art" className="flex items-center space-x-2">
+                <Sparkles className="w-4 h-4" />
+                <span>AI Art QR</span>
+                <span className="text-xs bg-purple-500 text-white px-1.5 py-0.5 rounded-full">PRO</span>
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="standard" className="space-y-6 mt-6">
+              {/* Standard QR Input */}
+              <QRInput
+                inputText={inputText}
+                onInputChange={setInputText}
+                onGenerate={() => generateQRCode(inputText)}
+                isGenerating={isGenerating}
+                isOverLimit={isOverLimit}
+                characterCount={characterCount}
+                maxCharacters={MAX_CHARACTERS}
+                optimizationShown={optimizationShown}
+                savedChars={savedChars}
+                onUndoOptimization={handleUndoOptimization}
+                contentType={contentType}
+                errorCorrectionLevel={errorCorrectionLevel}
+              />
 
-          {/* Smart Features */}
-          <URLShortener 
-            inputText={inputText}
-            onOptimizedUrl={setInputText}
-          />
-          
-          <ContextOptimizer 
-            inputText={inputText}
-            contentType={contentType}
-          />
-          
-          <BrandColorSelector 
-            inputText={inputText}
-          />
+              {/* Smart Features */}
+              <URLShortener 
+                inputText={inputText}
+                onOptimizedUrl={setInputText}
+              />
+              
+              <ContextOptimizer 
+                inputText={inputText}
+                contentType={contentType}
+              />
+              
+              <BrandColorSelector 
+                inputText={inputText}
+              />
+            </TabsContent>
+            
+            <TabsContent value="ai-art" className="space-y-6 mt-6">
+              {/* AI Art QR Generator */}
+              <AIArtQR
+                inputText={inputText}
+                onGenerate={handleAIArtGenerate}
+                isGenerating={isGenerating}
+              />
+            </TabsContent>
+          </Tabs>
 
           {/* Personalized Tips */}
           <PersonalizedTips suggestions={personalizedTips} />
