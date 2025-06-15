@@ -3,206 +3,223 @@ import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { QRGenerator } from '@/components/QRGenerator';
-import { Card, CardContent } from '@/components/ui/card';
-
-const features = [
-  {
-    icon: '⚡',
-    title: 'Instant Generation',
-    description: 'No waiting, no processing delays'
-  },
-  {
-    icon: '📱',
-    title: 'Mobile Optimized',
-    description: 'Perfect on phones and tablets'
-  },
-  {
-    icon: '🚫',
-    title: 'No Signup Required',
-    description: 'Start using immediately'
-  },
-  {
-    icon: '🔒',
-    title: 'Privacy First',
-    description: 'No tracking, no data storage'
-  },
-  {
-    icon: '🌙',
-    title: 'Dark Mode',
-    description: 'Easy on the eyes, day or night'
-  },
-  {
-    icon: '✨',
-    title: 'High Quality',
-    description: 'Crystal clear codes that always scan'
-  }
-];
-
-const useCases = [
-  'Share WiFi passwords with guests',
-  'Quick URL sharing for social media',
-  'Event registration links',
-  'Contact information sharing',
-  'Menu links for restaurants',
-  'Product information codes',
-  'App download links'
-];
-
-const faqs = [
-  {
-    question: 'Is this really free?',
-    answer: 'Yes, completely free. No hidden costs, no premium features, no limits.'
-  },
-  {
-    question: 'Do you store my data?',
-    answer: 'No. Everything happens in your browser. We never see or store your information.'
-  },
-  {
-    question: "What's the character limit?",
-    answer: '2000 characters, which covers 99% of use cases.'
-  },
-  {
-    question: 'Can I customize the QR code?',
-    answer: 'Currently generates standard black-and-white codes optimized for reliability.'
-  },
-  {
-    question: 'Does it work on mobile?',
-    answer: 'Absolutely. Designed mobile-first for easy use on any device.'
-  }
-];
-
-const comingSoon = [
-  {
-    icon: '🎨',
-    title: 'Custom Colors',
-    description: 'Brand your QR codes with custom colors'
-  },
-  {
-    icon: '📊',
-    title: 'Bulk Generation',
-    description: 'Create multiple codes at once'
-  },
-  {
-    icon: '🔧',
-    title: 'Advanced Options',
-    description: 'Error correction levels and formats'
-  }
-];
 
 function QRThisApp() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-        <div className="container max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-foreground">QRThis</h1>
-          <ThemeToggle />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Floating Header */}
+      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
+        <div className="container max-w-7xl mx-auto px-4 py-4">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center">
+                <span className="text-white font-bold text-lg">Q</span>
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
+                QRThis
+              </h1>
+            </div>
+            <ThemeToggle />
+          </div>
         </div>
       </header>
 
-      <main className="container max-w-6xl mx-auto px-4 py-8 space-y-16">
-        {/* Hero Section */}
-        <section className="text-center space-y-6 py-8">
-          <div className="space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold text-balance">
-              Generate QR Codes Instantly
-            </h1>
-            <p className="text-xl md:text-2xl text-muted-foreground text-balance max-w-3xl mx-auto">
-              Type anything. Get your QR code. No signup, no tracking, no nonsense.
-            </p>
-            <p className="text-lg text-muted-foreground text-balance max-w-4xl mx-auto">
-              The fastest way to create QR codes for URLs, text, WiFi passwords, contact info, or anything else. Download instantly, completely free.
-            </p>
+      <main className="container max-w-7xl mx-auto px-4">
+        {/* Hero Section - Completely Redesigned */}
+        <section className="py-20 text-center">
+          <div className="max-w-4xl mx-auto space-y-8">
+            <div className="space-y-6">
+              <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
+                <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient-x">
+                  Generate QR Codes
+                </span>
+                <br />
+                <span className="text-foreground/90">Instantly</span>
+              </h1>
+              
+              <p className="text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+                The fastest, most beautiful QR code generator. 
+                <br className="hidden md:block" />
+                <span className="font-semibold text-foreground">Type anything. Get your QR code. Done.</span>
+              </p>
+              
+              <div className="flex items-center justify-center space-x-8 text-sm text-muted-foreground">
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span>No signup required</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span>Privacy first</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse"></div>
+                  <span>Lightning fast</span>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* Main Tool Section */}
-        <section className="py-8">
+        {/* Main Tool Section - Enhanced */}
+        <section className="py-16">
           <QRGenerator />
         </section>
 
-        {/* Features Section */}
-        <section className="py-16">
-          <div className="text-center space-y-12">
-            <h2 className="text-3xl md:text-4xl font-bold">Why QRThis?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {features.map((feature, index) => (
-                <Card key={index} className="shadow-soft hover:shadow-lg transition-shadow duration-200">
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="text-4xl">{feature.icon}</div>
-                    <h3 className="text-xl font-semibold">{feature.title}</h3>
-                    <p className="text-muted-foreground">{feature.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        {/* Features Grid - Redesigned */}
+        <section className="py-20">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Why developers & creators choose QRThis
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Built for speed, designed for simplicity, trusted by thousands
+            </p>
           </div>
-        </section>
-
-        {/* Use Cases Section */}
-        <section className="py-16">
-          <div className="text-center space-y-12">
-            <h2 className="text-3xl md:text-4xl font-bold">Perfect For...</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl mx-auto">
-              {useCases.map((useCase, index) => (
-                <div key={index} className="flex items-center space-x-3 p-4 rounded-lg bg-muted/30">
-                  <div className="w-2 h-2 bg-secondary rounded-full flex-shrink-0"></div>
-                  <span className="text-lg">{useCase}</span>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: '⚡',
+                title: 'Instant Generation',
+                description: 'Generate QR codes in milliseconds. No waiting, no delays.',
+                color: 'from-yellow-400 to-orange-500'
+              },
+              {
+                icon: '📱',
+                title: 'Mobile Perfected',
+                description: 'Designed mobile-first. Works flawlessly on any device.',
+                color: 'from-blue-400 to-purple-500'
+              },
+              {
+                icon: '🔒',
+                title: 'Privacy First',
+                description: 'Zero tracking. Your data never leaves your device.',
+                color: 'from-green-400 to-emerald-500'
+              },
+              {
+                icon: '✨',
+                title: 'Crystal Clear',
+                description: 'High-resolution codes that scan perfectly every time.',
+                color: 'from-pink-400 to-rose-500'
+              },
+              {
+                icon: '🌙',
+                title: 'Dark Mode',
+                description: 'Beautiful in light or dark. Your eyes will thank you.',
+                color: 'from-indigo-400 to-blue-500'
+              },
+              {
+                icon: '🚀',
+                title: 'No Limits',
+                description: 'Generate unlimited QR codes. Completely free forever.',
+                color: 'from-cyan-400 to-teal-500'
+              }
+            ].map((feature, index) => (
+              <div key={index} className="group relative">
+                <div className="absolute -inset-1 bg-gradient-to-r opacity-20 group-hover:opacity-30 transition-opacity rounded-2xl blur-lg"
+                     style={{backgroundImage: `linear-gradient(to right, var(--tw-gradient-stops))`}}></div>
+                <div className="relative bg-card border border-border/50 rounded-2xl p-8 hover:border-border transition-all duration-300 hover:scale-105 hover:shadow-2xl">
+                  <div className={`w-14 h-14 bg-gradient-to-br ${feature.color} rounded-2xl flex items-center justify-center text-2xl mb-6 shadow-lg`}>
+                    {feature.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
+                  <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* FAQ Section */}
-        <section className="py-16">
-          <div className="space-y-12 max-w-4xl mx-auto">
-            <h2 className="text-3xl md:text-4xl font-bold text-center">FAQ</h2>
-            <div className="grid gap-6">
-              {faqs.map((faq, index) => (
-                <Card key={index} className="shadow-soft">
-                  <CardContent className="p-6">
-                    <h3 className="text-lg font-semibold mb-2">{faq.question}</h3>
-                    <p className="text-muted-foreground">{faq.answer}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        {/* Use Cases - Modern Cards */}
+        <section className="py-20">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Perfect for every use case</h2>
+            <p className="text-lg text-muted-foreground">From personal projects to enterprise solutions</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+            {[
+              'Share WiFi passwords instantly with guests',
+              'Quick URL sharing for social media campaigns',
+              'Event registration and check-in links',
+              'Contact information sharing at networking events',
+              'Restaurant menu QR codes for contactless dining',
+              'Product information and documentation links',
+              'App download links for mobile applications',
+              'Digital business cards and portfolios'
+            ].map((useCase, index) => (
+              <div key={index} className="flex items-start space-x-4 p-6 rounded-xl bg-card border border-border/50 hover:border-border transition-all duration-200 hover:shadow-lg">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center flex-shrink-0">
+                  <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <span className="text-lg leading-relaxed">{useCase}</span>
+              </div>
+            ))}
           </div>
         </section>
 
-        {/* Coming Soon Section */}
-        <section className="py-16">
-          <div className="text-center space-y-12">
-            <h2 className="text-3xl md:text-4xl font-bold">What's Next?</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {comingSoon.map((item, index) => (
-                <Card key={index} className="shadow-soft border-dashed border-2 opacity-75">
-                  <CardContent className="p-6 text-center space-y-4">
-                    <div className="text-4xl">{item.icon}</div>
-                    <h3 className="text-xl font-semibold">{item.title}</h3>
-                    <p className="text-muted-foreground">{item.description}</p>
-                  </CardContent>
-                </Card>
+        {/* FAQ - Improved Layout */}
+        <section className="py-20">
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-16">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Frequently asked questions</h2>
+              <p className="text-lg text-muted-foreground">Everything you need to know about QRThis</p>
+            </div>
+            
+            <div className="space-y-6">
+              {[
+                {
+                  question: 'Is QRThis really completely free?',
+                  answer: 'Yes, absolutely. No hidden costs, no premium tiers, no feature limitations. Generate unlimited QR codes forever.'
+                },
+                {
+                  question: 'Do you store or collect my data?',
+                  answer: 'Never. Everything happens locally in your browser. We have zero tracking, zero analytics, zero data collection.'
+                },
+                {
+                  question: 'What types of content can I encode?',
+                  answer: 'Anything! URLs, text, WiFi credentials, contact info, social media links, or any custom content up to 2000 characters.'
+                },
+                {
+                  question: 'How do I know my QR codes will scan reliably?',
+                  answer: 'We use optimal error correction and provide real-time scan reliability indicators based on your content length and complexity.'
+                },
+                {
+                  question: 'Can I use this on mobile devices?',
+                  answer: 'Absolutely. QRThis is designed mobile-first and works perfectly on phones, tablets, and any device with a modern browser.'
+                }
+              ].map((faq, index) => (
+                <div key={index} className="bg-card border border-border/50 rounded-2xl p-8 hover:border-border transition-all duration-200 hover:shadow-lg">
+                  <h3 className="text-xl font-semibold mb-4 text-primary">{faq.question}</h3>
+                  <p className="text-muted-foreground leading-relaxed text-lg">{faq.answer}</p>
+                </div>
               ))}
             </div>
           </div>
         </section>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-border bg-muted/30">
-        <div className="container max-w-6xl mx-auto px-4 py-8">
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Contact: <span className="text-foreground">contactqrthis@gmail.com</span>
-            </p>
-            <p className="text-sm text-muted-foreground">
-              We don't collect any data
-            </p>
-            <p className="text-sm text-muted-foreground">
-              Made with ❤️ by <span className="text-foreground font-medium">Oluwasegun Akinshola Lawrence</span>
-            </p>
+      {/* Footer - Minimalist */}
+      <footer className="border-t border-border/40 bg-muted/20 mt-20">
+        <div className="container max-w-7xl mx-auto px-4 py-12">
+          <div className="text-center space-y-6">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-secondary rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">Q</span>
+              </div>
+              <span className="text-lg font-semibold">QRThis</span>
+            </div>
+            
+            <div className="flex flex-col md:flex-row items-center justify-center space-y-2 md:space-y-0 md:space-x-8 text-sm text-muted-foreground">
+              <span>Contact: <a href="mailto:contactqrthis@gmail.com" className="text-primary hover:underline">contactqrthis@gmail.com</a></span>
+              <span>•</span>
+              <span>Privacy-first, always</span>
+              <span>•</span>
+              <span>Made with ❤️ by <span className="text-foreground font-medium">Oluwasegun Akinshola Lawrence</span></span>
+            </div>
           </div>
         </div>
       </footer>
