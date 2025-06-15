@@ -1,16 +1,22 @@
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AIAssistant } from '@/components/AIAssistant';
 import { PersonalizedTips } from '@/components/SmartFeatures';
 import { QRInput } from '@/components/QRInput';
 import { QRDisplay } from '@/components/QRDisplay';
+import { BatchProcessor } from '@/components/BatchProcessor';
+import { URLShortener } from '@/components/URLShortener';
+import { ContextOptimizer } from '@/components/ContextOptimizer';
+import { BrandColorSelector } from '@/components/BrandColorSelector';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 
 const MAX_CHARACTERS = 2000;
 
 export function QRGenerator() {
   const { toast } = useToast();
+  const [batchResults, setBatchResults] = useState<any[]>([]);
+  
   const {
     inputText,
     setInputText,
@@ -48,6 +54,32 @@ export function QRGenerator() {
     setInputText(content);
   }, [setInputText]);
 
+  const handleBatchGenerate = useCallback((items: any[]) => {
+    setBatchResults(items);
+    toast({
+      title: "Batch Processing Complete",
+      description: `Generated ${items.length} QR codes successfully!`,
+    });
+  }, [toast]);
+
+  const handleBatchDownload = useCallback(() => {
+    batchResults.forEach((item, index) => {
+      if (item.qrDataURL) {
+        const link = document.createElement('a');
+        link.download = item.filename;
+        link.href = item.qrDataURL;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+    });
+    
+    toast({
+      title: "Batch Download Complete",
+      description: `Downloaded ${batchResults.length} QR codes!`,
+    });
+  }, [batchResults, toast]);
+
   return (
     <div className="w-full max-w-6xl mx-auto">
       <div className="grid lg:grid-cols-2 gap-12 items-start">
@@ -82,8 +114,62 @@ export function QRGenerator() {
             errorCorrectionLevel={errorCorrectionLevel}
           />
 
+          {/* Smart Features */}
+          <URLShortener 
+            inputText={inputText}
+            onOptimizedUrl={setInputText}
+          />
+          
+          <ContextOptimizer 
+            inputText={inputText}
+            contentType={contentType}
+          />
+          
+          <BrandColorSelector 
+            inputText={inputText}
+          />
+
           {/* Personalized Tips */}
           <PersonalizedTips suggestions={personalizedTips} />
+
+          {/* Batch Processing */}
+          <BatchProcessor onBatchGenerate={handleBatchGenerate} />
+          
+          {/* Batch Results */}
+          {batchResults.length > 0 && (
+            <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-700">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-medium text-green-800 dark:text-green-200">
+                  Batch Results ({batchResults.length} QR codes)
+                </h4>
+                <button
+                  onClick={handleBatchDownload}
+                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                >
+                  Download All
+                </button>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {batchResults.slice(0, 6).map((item, index) => (
+                  <div key={index} className="text-center">
+                    <img 
+                      src={item.qrDataURL} 
+                      alt={`QR ${index + 1}`}
+                      className="w-16 h-16 mx-auto border rounded"
+                    />
+                    <p className="text-xs text-green-700 dark:text-green-300 mt-1 truncate">
+                      {item.type}
+                    </p>
+                  </div>
+                ))}
+                {batchResults.length > 6 && (
+                  <div className="flex items-center justify-center text-sm text-green-600 dark:text-green-400">
+                    +{batchResults.length - 6} more
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Output Section - Right Side */}

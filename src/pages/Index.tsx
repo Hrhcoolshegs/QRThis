@@ -1,8 +1,8 @@
+
 import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { QRGenerator } from '@/components/QRGenerator';
-import { ComingSoon } from '@/components/ComingSoon';
 
 function QRThisApp() {
   return (
@@ -69,26 +69,26 @@ function QRThisApp() {
             {[
               {
                 icon: '🤖',
-                title: 'AI Assistant',
-                description: 'Chat with our AI to create the perfect QR code for any use case.',
+                title: 'Smart Batch Processing',
+                description: 'Process multiple URLs, contacts, or text items automatically with AI separation.',
                 color: 'from-indigo-500 to-purple-500'
               },
               {
-                icon: '⚡',
-                title: 'Instant Generation',
-                description: 'Generate QR codes in milliseconds with AI optimization.',
+                icon: '🔗',
+                title: 'Auto URL Shortening',
+                description: 'Long URLs automatically optimized for better scanning performance.',
                 color: 'from-purple-500 to-pink-500'
               },
               {
-                icon: '📱',
-                title: 'Smart Formatting',
-                description: 'AI automatically formats WiFi, contacts, and URLs perfectly.',
+                icon: '🎯',
+                title: 'Context-Aware Optimization',
+                description: 'AI understands your use case and optimizes QR codes accordingly.',
                 color: 'from-emerald-500 to-teal-500'
               },
               {
-                icon: '🔒',
-                title: 'Privacy First',
-                description: 'Zero tracking. Your data never leaves your device.',
+                icon: '🎨',
+                title: 'Brand Color Intelligence',
+                description: 'Extract and apply brand colors while maintaining perfect scannability.',
                 color: 'from-orange-500 to-red-500'
               },
               {
@@ -213,9 +213,6 @@ function QRThisApp() {
             </div>
           </div>
         </section>
-
-        {/* Coming Soon Section */}
-        <ComingSoon />
       </main>
 
       {/* Footer */}
