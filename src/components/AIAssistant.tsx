@@ -20,7 +20,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
     {
       id: '1',
       role: 'assistant',
-      content: "Hi! I'm your QR code AI assistant. I can help you create the perfect QR code for any use case. What would you like to create today?",
+      content: "Hi! I'm Alexander, your QR code AI assistant. I can help you create the perfect QR code for any use case. What would you like to create today?",
       timestamp: new Date()
     }
   ]);
@@ -157,7 +157,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
         className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold h-12 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
       >
         <Bot className="w-5 h-5" />
-        Ask AI Assistant
+        Ask Alexander
       </Button>
 
       {/* Chat Panel */}
@@ -171,7 +171,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
                   <Bot className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">QR Assistant</h3>
+                  <h3 className="font-semibold text-white">Alexander</h3>
                   <p className="text-xs text-gray-400">AI-powered QR optimization</p>
                 </div>
               </div>
