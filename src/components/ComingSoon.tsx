@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Heart, CheckCircle } from 'lucide-react';
 
@@ -7,28 +6,24 @@ const upcomingFeatures = [
     icon: "🤖",
     title: "Smart Batch Processing",
     description: "Paste a list of URLs or contacts and we'll automatically separate and generate multiple QR codes at once.",
-    eta: "Next Month",
     interest: 89
   },
   {
     icon: "🔗", 
     title: "Auto URL Shortening",
     description: "Long URLs automatically shortened for better scanning while preserving your original links.",
-    eta: "2 Weeks",
     interest: 94
   },
   {
     icon: "🎯",
     title: "Context-Aware Optimization", 
     description: "AI understands if you're creating QR codes for restaurants, events, or business cards and optimizes accordingly.",
-    eta: "6 Weeks",
     interest: 76
   },
   {
     icon: "🎨",
     title: "Brand Color Intelligence",
     description: "Automatically extract and suggest brand colors from your website that maintain perfect scannability.",
-    eta: "8 Weeks", 
     interest: 82
   }
 ];
@@ -43,10 +38,7 @@ function FeatureCard({ feature }: { feature: typeof upcomingFeatures[0] }) {
       <p className="text-gray-600 dark:text-gray-300 text-sm mb-4">
         {feature.description}
       </p>
-      <div className="flex items-center justify-between">
-        <span className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
-          {feature.eta}
-        </span>
+      <div className="flex items-center justify-end">
         <div className="flex items-center gap-1 text-xs text-gray-500">
           <Heart size={12} />
           <span>{feature.interest}% want this</span>
