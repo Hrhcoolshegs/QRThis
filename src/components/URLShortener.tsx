@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Link, Loader2 } from 'lucide-react';
+import { Link, Loader2, X, RotateCcw } from 'lucide-react';
 import { shouldShortenUrl, shortenUrl, getUrlOptimizationBenefit, isValidUrl } from '@/utils/urlShortening';
 import { detectContentType } from '@/utils/smartOptimization';
 
@@ -15,6 +15,7 @@ export function URLShortener({ inputText, onOptimizedUrl }: URLShortenerProps) {
   const [isShortening, setIsShortening] = useState(false);
   const [shortenedUrl, setShortenedUrl] = useState<string | null>(null);
   const [optimizationBenefit, setOptimizationBenefit] = useState<any>(null);
+  const [isOptimizationApplied, setIsOptimizationApplied] = useState(false);
 
   const isUrl = detectContentType(inputText) === 'url' && isValidUrl(inputText);
   const shouldShorten = isUrl && shouldShortenUrl(inputText);
@@ -23,6 +24,7 @@ export function URLShortener({ inputText, onOptimizedUrl }: URLShortenerProps) {
     // Reset when input changes
     setShortenedUrl(null);
     setOptimizationBenefit(null);
+    setIsOptimizationApplied(false);
   }, [inputText]);
 
   const handleShortenUrl = async () => {
@@ -46,7 +48,18 @@ export function URLShortener({ inputText, onOptimizedUrl }: URLShortenerProps) {
   const handleUseShortened = () => {
     if (shortenedUrl) {
       onOptimizedUrl(shortenedUrl);
+      setIsOptimizationApplied(true);
     }
+  };
+
+  const handleRevertToOriginal = () => {
+    onOptimizedUrl(inputText);
+    setIsOptimizationApplied(false);
+  };
+
+  const handleDismiss = () => {
+    setShortenedUrl(null);
+    setOptimizationBenefit(null);
   };
 
   if (!shouldShorten) return null;
@@ -55,9 +68,19 @@ export function URLShortener({ inputText, onOptimizedUrl }: URLShortenerProps) {
     <Card className="border-l-4 border-l-blue-500">
       <CardContent className="p-4">
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Link className="w-5 h-5 text-blue-600" />
-            <h4 className="font-medium text-blue-800 dark:text-blue-200">Smart URL Optimization</h4>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Link className="w-5 h-5 text-blue-600" />
+              <h4 className="font-medium text-blue-800 dark:text-blue-200">Smart URL Optimization</h4>
+            </div>
+            <Button
+              onClick={handleDismiss}
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X size={16} />
+            </Button>
           </div>
           
           <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
@@ -104,13 +127,35 @@ export function URLShortener({ inputText, onOptimizedUrl }: URLShortenerProps) {
                   </div>
                 )}
                 
-                <Button
-                  onClick={handleUseShortened}
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm"
-                  size="sm"
-                >
-                  Use Optimized URL
-                </Button>
+                <div className="flex gap-2">
+                  {!isOptimizationApplied ? (
+                    <Button
+                      onClick={handleUseShortened}
+                      className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                      size="sm"
+                    >
+                      Use Optimized URL
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={handleRevertToOriginal}
+                      variant="outline"
+                      className="text-gray-600 hover:text-gray-700 text-sm"
+                      size="sm"
+                    >
+                      <RotateCcw size={14} className="mr-1" />
+                      Revert to Original
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleDismiss}
+                    variant="ghost"
+                    size="sm"
+                    className="text-gray-500 hover:text-gray-700"
+                  >
+                    Dismiss
+                  </Button>
+                </div>
               </div>
             )}
           </div>

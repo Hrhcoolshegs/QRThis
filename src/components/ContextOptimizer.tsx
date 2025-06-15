@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { X } from 'lucide-react';
 import { detectQRContext, getContextLabel, getContextIcon } from '@/utils/contextAware';
 
 interface ContextOptimizerProps {
@@ -10,27 +12,43 @@ interface ContextOptimizerProps {
 
 export function ContextOptimizer({ inputText, contentType }: ContextOptimizerProps) {
   const [detectedContext, setDetectedContext] = useState<any>(null);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     if (inputText.trim()) {
       const context = detectQRContext(inputText);
       setDetectedContext(context);
+      setIsVisible(true);
     } else {
       setDetectedContext(null);
     }
   }, [inputText]);
 
-  if (!detectedContext) return null;
+  const handleDismiss = () => {
+    setIsVisible(false);
+  };
+
+  if (!detectedContext || !isVisible) return null;
 
   return (
     <Card className="border-l-4 border-l-indigo-500">
       <CardContent className="p-4">
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">{getContextIcon(detectedContext.type)}</span>
-            <h4 className="font-medium text-indigo-800 dark:text-indigo-200">
-              Context-Aware Optimization
-            </h4>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{getContextIcon(detectedContext.type)}</span>
+              <h4 className="font-medium text-indigo-800 dark:text-indigo-200">
+                Context-Aware Optimization
+              </h4>
+            </div>
+            <Button
+              onClick={handleDismiss}
+              variant="ghost"
+              size="sm"
+              className="text-gray-500 hover:text-gray-700"
+            >
+              <X size={16} />
+            </Button>
           </div>
           
           <div className="bg-indigo-50 dark:bg-indigo-900/20 p-3 rounded-lg">

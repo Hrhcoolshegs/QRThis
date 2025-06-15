@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import QRCode from 'qrcode';
 import { optimizeText, detectContentType, getOptimalErrorCorrection } from '@/utils/smartOptimization';
 import { trackUsage, getPersonalizedTips } from '@/utils/analytics';
@@ -40,41 +40,36 @@ export function useQRGenerator({
   const [error, setError] = useState<string | null>(null);
   const [optimizationShown, setOptimizationShown] = useState(false);
   const [savedChars, setSavedChars] = useState(0);
-  const [contentType, setContentType] = useState('text');
-  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<'L' | 'M' | 'Q' | 'H'>('M');
   const [personalizedTips, setPersonalizedTips] = useState<string[]>([]);
 
-  // Auto-optimization effect
+  // Memoized computed values for better performance
+  const contentType = useMemo(() => detectContentType(inputText), [inputText]);
+  const errorCorrectionLevel = useMemo(() => getOptimalErrorCorrection(inputText), [inputText]);
+  const characterCount = useMemo(() => inputText.length, [inputText]);
+  const isOverLimit = useMemo(() => characterCount > maxCharacters, [characterCount, maxCharacters]);
+
+  // Auto-optimization effect with cleanup
   useEffect(() => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || optimizationShown) return;
     
     const timeoutId = setTimeout(() => {
       const result = optimizeText(inputText);
-      if (result.saved > 0 && !optimizationShown) {
+      if (result.saved > 0) {
         setOriginalText(inputText);
         setInputText(result.optimized);
         setSavedChars(result.saved);
         setOptimizationShown(true);
         
-        // Hide optimization badge after 5 seconds
-        setTimeout(() => setOptimizationShown(false), 5000);
+        // Auto-hide optimization badge
+        const hideTimeout = setTimeout(() => setOptimizationShown(false), 5000);
+        return () => clearTimeout(hideTimeout);
       }
     }, optimizationDelay);
 
     return () => clearTimeout(timeoutId);
   }, [inputText, optimizationShown, optimizationDelay]);
 
-  // Content type detection effect
-  useEffect(() => {
-    const detected = detectContentType(inputText);
-    setContentType(detected);
-    
-    // Set optimal error correction
-    const optimal = getOptimalErrorCorrection(inputText);
-    setErrorCorrectionLevel(optimal);
-  }, [inputText]);
-
-  // Load personalized tips on mount
+  // Load personalized tips on mount only
   useEffect(() => {
     setPersonalizedTips(getPersonalizedTips());
   }, []);
@@ -112,10 +107,11 @@ export function useQRGenerator({
       // Track usage for analytics
       trackUsage(text, contentType);
       
-      // Update personalized tips
+      // Update personalized tips only when needed
       setPersonalizedTips(getPersonalizedTips());
       
     } catch (err) {
+      console.error('QR Code generation failed:', err);
       setError('Failed to generate QR code. Please try again.');
       setQrCodeDataURL('');
     } finally {
@@ -135,19 +131,19 @@ export function useQRGenerator({
   const handleInputChange = useCallback((text: string) => {
     setInputText(text);
     setOptimizationShown(false);
+    setError(null); // Clear errors when input changes
   }, []);
 
-  // Debounced QR generation
+  // Optimized debounced QR generation
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      generateQRCode(inputText);
+      if (inputText.trim()) {
+        generateQRCode(inputText);
+      }
     }, debounceDelay);
 
     return () => clearTimeout(timeoutId);
   }, [inputText, generateQRCode, debounceDelay]);
-
-  const characterCount = inputText.length;
-  const isOverLimit = characterCount > maxCharacters;
 
   return {
     inputText,
