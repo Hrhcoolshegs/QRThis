@@ -10,7 +10,7 @@ import { URLShortener } from '@/components/URLShortener';
 import { ContextOptimizer } from '@/components/ContextOptimizer';
 import { BrandColorSelector } from '@/components/BrandColorSelector';
 import { Button } from '@/components/ui/button';
-import { Download, Trash2 } from 'lucide-react';
+import { Download, Trash2, X } from 'lucide-react';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 
 const MAX_CHARACTERS = 2000;
