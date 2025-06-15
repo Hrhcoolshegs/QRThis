@@ -1,10 +1,10 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import QRCode from 'qrcode';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Download, Loader2, Zap, Shield, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { AIAssistant } from '@/components/AIAssistant';
 
 const MAX_CHARACTERS = 2000;
 const DEBOUNCE_DELAY = 300;
@@ -154,7 +154,6 @@ export function QRGenerator() {
     setError(null);
 
     try {
-      // Enhanced QR generation with better settings
       const dataURL = await QRCode.toDataURL(text, {
         errorCorrectionLevel: 'M',
         type: 'image/png',
@@ -164,7 +163,7 @@ export function QRGenerator() {
           dark: '#000000',
           light: '#FFFFFF'
         },
-        width: 512 // Generate at high res, display optimally
+        width: 512
       });
       setQrCodeDataURL(dataURL);
     } catch (err) {
@@ -187,7 +186,7 @@ export function QRGenerator() {
     if (!qrCodeDataURL) return;
 
     const link = document.createElement('a');
-    link.download = `qrthis-${Date.now()}.png`;
+    link.download = `qrthis-ai-${Date.now()}.png`;
     link.href = qrCodeDataURL;
     document.body.appendChild(link);
     link.click();
@@ -195,9 +194,13 @@ export function QRGenerator() {
 
     toast({
       title: "QR Code Downloaded",
-      description: "Your QR code has been saved successfully!",
+      description: "Your AI-optimized QR code has been saved successfully!",
     });
   }, [qrCodeDataURL, toast]);
+
+  const handleAIGenerated = (content: string) => {
+    setInputText(content);
+  };
 
   const characterCount = inputText.length;
   const isOverLimit = characterCount > MAX_CHARACTERS;
@@ -209,25 +212,30 @@ export function QRGenerator() {
         <div className="space-y-8">
           {/* Header */}
           <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-bold mb-3">Create Your QR Code</h2>
-            <p className="text-muted-foreground text-lg">
-              Enter any text, URL, or data below and watch the magic happen
+            <h2 className="text-2xl font-bold mb-3 text-white">Create Your AI-Powered QR Code</h2>
+            <p className="text-gray-300 text-lg">
+              Enter any text, URL, or data below, or let our AI assistant guide you
             </p>
           </div>
 
+          {/* AI Assistant */}
+          <div className="flex justify-center lg:justify-start">
+            <AIAssistant onContentGenerated={handleAIGenerated} />
+          </div>
+
           {/* Input Card */}
-          <Card className="shadow-2xl border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm">
+          <Card className="shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50">
             <CardContent className="p-8">
               <div className="space-y-6">
                 <div className="relative">
                   <textarea
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
-                    placeholder="Enter text, URL, WiFi password, contact info, or anything else..."
-                    className="w-full min-h-[200px] p-6 border-2 border-border/20 rounded-xl resize-none focus:outline-none focus:ring-4 focus:ring-primary/20 focus:border-primary/50 transition-all duration-300 text-lg leading-relaxed bg-background/50 backdrop-blur-sm"
+                    placeholder="Enter text, URL, WiFi password, contact info, or let AI help you..."
+                    className="w-full min-h-[200px] p-6 border-2 border-gray-600/20 rounded-xl resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-300 text-lg leading-relaxed bg-gray-900/50 backdrop-blur-sm text-white placeholder-gray-400"
                     autoFocus
                   />
-                  <div className="absolute bottom-4 right-4 bg-background/80 backdrop-blur-sm rounded-lg px-3 py-1">
+                  <div className="absolute bottom-4 right-4 bg-gray-800/80 backdrop-blur-sm rounded-lg px-3 py-1">
                     <EnhancedCharacterCounter count={characterCount} maxCount={MAX_CHARACTERS} />
                   </div>
                 </div>
@@ -237,12 +245,12 @@ export function QRGenerator() {
                 <Button
                   onClick={() => generateQRCode(inputText)}
                   disabled={!inputText.trim() || isOverLimit || isGenerating}
-                  className="w-full bg-gradient-to-r from-primary to-secondary hover:from-primary/90 hover:to-secondary/90 text-white font-semibold h-14 text-lg rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:hover:scale-100"
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold h-14 text-lg rounded-xl transition-all duration-300 hover:scale-[1.02] hover:shadow-xl disabled:hover:scale-100"
                 >
                   {isGenerating ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-3 animate-spin" />
-                      Generating Magic...
+                      AI Generating Magic...
                     </>
                   ) : (
                     <>
@@ -257,17 +265,17 @@ export function QRGenerator() {
 
           {/* Feature Highlights */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
-              <Shield className="w-5 h-5 text-green-600" />
-              <span className="text-sm font-medium text-green-800 dark:text-green-200">Private & Secure</span>
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-green-900/20 border border-green-700/50 backdrop-blur-sm">
+              <Shield className="w-5 h-5 text-green-400" />
+              <span className="text-sm font-medium text-green-300">Private & Secure</span>
             </div>
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-              <Zap className="w-5 h-5 text-blue-600" />
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">Lightning Fast</span>
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-blue-900/20 border border-blue-700/50 backdrop-blur-sm">
+              <Zap className="w-5 h-5 text-blue-400" />
+              <span className="text-sm font-medium text-blue-300">AI-Powered</span>
             </div>
-            <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
-              <Smartphone className="w-5 h-5 text-purple-600" />
-              <span className="text-sm font-medium text-purple-800 dark:text-purple-200">Mobile Ready</span>
+            <div className="flex items-center space-x-3 p-4 rounded-xl bg-purple-900/20 border border-purple-700/50 backdrop-blur-sm">
+              <Smartphone className="w-5 h-5 text-purple-400" />
+              <span className="text-sm font-medium text-purple-300">Mobile Ready</span>
             </div>
           </div>
         </div>
@@ -275,40 +283,40 @@ export function QRGenerator() {
         {/* Output Section - Right Side */}
         <div className="space-y-8">
           <div className="text-center lg:text-left">
-            <h2 className="text-2xl font-bold mb-3">Your QR Code</h2>
-            <p className="text-muted-foreground text-lg">
+            <h2 className="text-2xl font-bold mb-3 text-white">Your AI-Optimized QR Code</h2>
+            <p className="text-gray-300 text-lg">
               Ready to download and share with the world
             </p>
           </div>
 
           {/* QR Code Display */}
-          <Card className="shadow-2xl border-0 bg-gradient-to-br from-card to-card/50 backdrop-blur-sm min-h-[500px] flex items-center justify-center">
+          <Card className="shadow-2xl border-0 bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 min-h-[500px] flex items-center justify-center">
             <CardContent className="p-8 w-full">
               {error ? (
                 <div className="text-center space-y-4">
-                  <div className="w-16 h-16 bg-red-100 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-16 h-16 bg-red-900/20 rounded-full flex items-center justify-center mx-auto">
                     <span className="text-2xl">⚠️</span>
                   </div>
-                  <p className="text-destructive text-lg font-medium">{error}</p>
+                  <p className="text-red-400 text-lg font-medium">{error}</p>
                 </div>
               ) : !inputText.trim() ? (
                 <div className="text-center space-y-6 py-12">
-                  <div className="w-24 h-24 bg-gradient-to-br from-primary/20 to-secondary/20 rounded-2xl flex items-center justify-center mx-auto">
-                    <div className="w-12 h-12 border-4 border-dashed border-primary/40 rounded-lg"></div>
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-2xl flex items-center justify-center mx-auto">
+                    <div className="w-12 h-12 border-4 border-dashed border-blue-400/40 rounded-lg"></div>
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Ready to generate</h3>
-                    <p className="text-muted-foreground">Enter some text on the left to see your QR code appear here</p>
+                    <h3 className="text-xl font-semibold mb-2 text-white">Ready to generate</h3>
+                    <p className="text-gray-400">Enter some text on the left or ask our AI assistant for help</p>
                   </div>
                 </div>
               ) : isGenerating ? (
                 <div className="text-center space-y-6 py-12">
-                  <div className="w-24 h-24 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl flex items-center justify-center mx-auto">
                     <Loader2 className="w-8 h-8 text-white animate-spin" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold mb-2">Creating your QR code</h3>
-                    <p className="text-muted-foreground">This will just take a moment...</p>
+                    <h3 className="text-xl font-semibold mb-2 text-white">AI creating your QR code</h3>
+                    <p className="text-gray-400">Optimizing for best scan results...</p>
                   </div>
                 </div>
               ) : qrCodeDataURL ? (
@@ -323,9 +331,9 @@ export function QRGenerator() {
                       className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold h-12 px-8 rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg"
                     >
                       <Download className="w-5 h-5 mr-2" />
-                      Download High-Res PNG
+                      Download AI-Optimized PNG
                     </Button>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-400">
                       Right-click the QR code above to save directly, or use the download button
                     </p>
                   </div>

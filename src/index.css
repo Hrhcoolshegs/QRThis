@@ -37,32 +37,32 @@
   }
 
   .dark {
-    --background: 217 33% 17%;
+    --background: 0 0% 0%;
     --foreground: 220 14% 96%;
 
-    --card: 217 33% 17%;
+    --card: 217 33% 8%;
     --card-foreground: 220 14% 96%;
 
-    --popover: 217 33% 17%;
+    --popover: 217 33% 8%;
     --popover-foreground: 220 14% 96%;
 
     --primary: 213 93% 68%;
-    --primary-foreground: 217 33% 17%;
+    --primary-foreground: 0 0% 0%;
 
     --secondary: 158 64% 52%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 215 25% 27%;
+    --muted: 217 33% 15%;
     --muted-foreground: 217 10% 65%;
 
-    --accent: 215 25% 27%;
+    --accent: 217 33% 15%;
     --accent-foreground: 220 14% 96%;
 
-    --destructive: 0 62% 31%;
+    --destructive: 0 62% 50%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 215 25% 27%;
-    --input: 215 25% 27%;
+    --border: 217 33% 15%;
+    --input: 217 33% 15%;
     --ring: 213 93% 68%;
   }
 }
@@ -73,7 +73,7 @@
   }
 
   body {
-    @apply bg-background text-foreground font-inter;
+    @apply bg-black text-white font-inter;
   }
 }
 
@@ -94,5 +94,14 @@
     50% {
       background-position: 100% 50%;
     }
+  }
+
+  /* Dark AI theme enhancements */
+  .ai-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+  }
+  
+  .ai-glow:hover {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);
   }
 }
