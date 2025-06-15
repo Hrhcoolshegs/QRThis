@@ -6,9 +6,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Download, Loader2, Zap, Shield, Smartphone } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { AIAssistant } from '@/components/AIAssistant';
+import { OptimizationBadge, ContentTypeIndicator, ErrorCorrectionIndicator, PersonalizedTips } from '@/components/SmartFeatures';
+import { optimizeText, detectContentType, getOptimalErrorCorrection } from '@/utils/smartOptimization';
+import { trackUsage, getPersonalizedTips } from '@/utils/analytics';
 
 const MAX_CHARACTERS = 2000;
 const DEBOUNCE_DELAY = 300;
+const OPTIMIZATION_DELAY = 2000;
 
 // Character limit status helper
 function getCharacterLimitStatus(count: number) {
@@ -49,36 +53,6 @@ function ScanReliabilityIndicator({ characterCount }: { characterCount: number }
       <div className="flex items-center gap-2">
         <div className={`w-2 h-2 rounded-full ${reliability.color}`}></div>
         <span>Scan Reliability: {reliability.level} (~{reliability.percentage}%)</span>
-      </div>
-    </div>
-  );
-}
-
-// Smart recommendations component
-function SmartRecommendations({ text, characterCount }: { text: string; characterCount: number }) {
-  const recommendations = [];
-  
-  if (characterCount > 700) {
-    if (text.includes('http://')) {
-      recommendations.push('💡 Use HTTPS instead of HTTP to save characters');
-    }
-    if (text.includes('www.')) {
-      recommendations.push('💡 Remove "www." to save characters');
-    }
-    if (text.includes('  ')) {
-      recommendations.push('💡 Remove extra spaces to save characters');
-    }
-  }
-  
-  if (recommendations.length === 0) return null;
-  
-  return (
-    <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-      <div className="text-sm text-blue-800 dark:text-blue-200">
-        <div className="font-medium mb-1">Optimization Tips:</div>
-        {recommendations.map((tip, i) => (
-          <div key={i} className="text-xs">{tip}</div>
-        ))}
       </div>
     </div>
   );
@@ -133,10 +107,51 @@ function OptimizedQRDisplay({ qrDataURL, characterCount }: { qrDataURL: string; 
 
 export function QRGenerator() {
   const [inputText, setInputText] = useState('');
+  const [originalText, setOriginalText] = useState('');
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [optimizationShown, setOptimizationShown] = useState(false);
+  const [savedChars, setSavedChars] = useState(0);
+  const [contentType, setContentType] = useState('text');
+  const [errorCorrectionLevel, setErrorCorrectionLevel] = useState<'L' | 'M' | 'Q' | 'H'>('M');
+  const [personalizedTips, setPersonalizedTips] = useState<string[]>([]);
   const { toast } = useToast();
+
+  // Auto-optimization effect
+  useEffect(() => {
+    if (!inputText.trim()) return;
+    
+    const timeoutId = setTimeout(() => {
+      const result = optimizeText(inputText);
+      if (result.saved > 0 && !optimizationShown) {
+        setOriginalText(inputText);
+        setInputText(result.optimized);
+        setSavedChars(result.saved);
+        setOptimizationShown(true);
+        
+        // Hide optimization badge after 5 seconds
+        setTimeout(() => setOptimizationShown(false), 5000);
+      }
+    }, OPTIMIZATION_DELAY);
+
+    return () => clearTimeout(timeoutId);
+  }, [inputText, optimizationShown]);
+
+  // Content type detection effect
+  useEffect(() => {
+    const detected = detectContentType(inputText);
+    setContentType(detected);
+    
+    // Set optimal error correction
+    const optimal = getOptimalErrorCorrection(inputText);
+    setErrorCorrectionLevel(optimal);
+  }, [inputText]);
+
+  // Load personalized tips on mount
+  useEffect(() => {
+    setPersonalizedTips(getPersonalizedTips());
+  }, []);
 
   const generateQRCode = useCallback(async (text: string) => {
     if (!text.trim()) {
@@ -156,7 +171,7 @@ export function QRGenerator() {
 
     try {
       const dataURL = await QRCode.toDataURL(text, {
-        errorCorrectionLevel: 'M',
+        errorCorrectionLevel: errorCorrectionLevel,
         type: 'image/png',
         quality: 0.92,
         margin: 2,
@@ -167,13 +182,20 @@ export function QRGenerator() {
         width: 512
       });
       setQrCodeDataURL(dataURL);
+      
+      // Track usage for analytics
+      trackUsage(text, contentType);
+      
+      // Update personalized tips
+      setPersonalizedTips(getPersonalizedTips());
+      
     } catch (err) {
       setError('Failed to generate QR code. Please try again.');
       setQrCodeDataURL('');
     } finally {
       setIsGenerating(false);
     }
-  }, []);
+  }, [errorCorrectionLevel, contentType]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -203,6 +225,15 @@ export function QRGenerator() {
     setInputText(content);
   };
 
+  const handleUndoOptimization = () => {
+    if (originalText) {
+      setInputText(originalText);
+      setOriginalText('');
+      setOptimizationShown(false);
+      setSavedChars(0);
+    }
+  };
+
   const characterCount = inputText.length;
   const isOverLimit = characterCount > MAX_CHARACTERS;
 
@@ -228,10 +259,21 @@ export function QRGenerator() {
           <Card className="shadow-lg border border-gray-200 dark:border-gray-700/50 bg-white dark:bg-gray-800/50">
             <CardContent className="p-8">
               <div className="space-y-6">
+                {/* Optimization Badge */}
+                {optimizationShown && savedChars > 0 && (
+                  <OptimizationBadge 
+                    savedChars={savedChars} 
+                    onUndo={handleUndoOptimization}
+                  />
+                )}
+
                 <div className="relative">
                   <textarea
                     value={inputText}
-                    onChange={(e) => setInputText(e.target.value)}
+                    onChange={(e) => {
+                      setInputText(e.target.value);
+                      setOptimizationShown(false);
+                    }}
                     placeholder="Enter text, URL, WiFi password, contact info, or let AI help you..."
                     className="w-full min-h-[200px] p-6 border-2 border-gray-200 dark:border-gray-600/20 rounded-xl resize-none focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-300 text-lg leading-relaxed bg-white dark:bg-gray-900/50 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                     autoFocus
@@ -241,7 +283,11 @@ export function QRGenerator() {
                   </div>
                 </div>
 
-                <SmartRecommendations text={inputText} characterCount={characterCount} />
+                {/* Content Type Indicator */}
+                <ContentTypeIndicator contentType={contentType} />
+
+                {/* Error Correction Indicator */}
+                <ErrorCorrectionIndicator errorLevel={errorCorrectionLevel} />
 
                 <Button
                   onClick={() => generateQRCode(inputText)}
@@ -263,6 +309,9 @@ export function QRGenerator() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Personalized Tips */}
+          <PersonalizedTips suggestions={personalizedTips} />
 
           {/* Feature Highlights */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
