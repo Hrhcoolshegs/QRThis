@@ -96,7 +96,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
             const content = `WIFI:T:WPA;S:${ssid};P:${password};;`;
             return {
               content: `Perfect! I've created a WiFi QR code for "${ssid}". When scanned, devices will automatically connect to your network.\n\n✅ QR code generated successfully!\n\n💡 Pro tip: Test the QR code with your phone first, then print and place it where guests can easily see it.`,
-              type: 'success',
+              type: 'success' as const,
               generatedContent: content
             };
           }
@@ -111,7 +111,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
             setConversationContext({});
             return {
               content: `Great! I've created your WiFi QR code for "${ssid}".\n\n✅ QR code generated!\n\n💡 Tip: Place this QR code in a visible location for easy guest access.`,
-              type: 'success',
+              type: 'success' as const,
               generatedContent: content
             };
           }
@@ -120,7 +120,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
         setConversationContext({ awaitingWifiDetails: true });
         return {
           content: "I'll help you create a WiFi QR code! Please provide:\n\n📶 **Network name** and **password**\n\nExample: 'MyNetwork MyPassword123'\n\nOr tell me like: 'Network name is CafeWiFi and password is coffee2024'",
-          type: 'text',
+          type: 'text' as const,
           suggestions: ["My network is HomeWiFi password123", "Create guest network QR"]
         };
 
@@ -134,13 +134,13 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
           const optimizedUrl = validateAndOptimizeContent(url);
           return {
             content: `Excellent! I've created a QR code for your website.\n\n🌐 **URL**: ${optimizedUrl}\n\n✅ QR code generated!\n\n💡 Pro tip: Test the link on mobile first to ensure it loads quickly.`,
-            type: 'success',
+            type: 'success' as const,
             generatedContent: optimizedUrl
           };
         }
         return {
           content: "I'll create a website QR code for you! 🌐\n\nPlease share the URL you'd like to use.\n\nExample: 'mywebsite.com' or 'https://example.com'",
-          type: 'text',
+          type: 'text' as const,
           suggestions: ["mywebsite.com", "Create URL shortener"]
         };
 
@@ -149,21 +149,21 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
           // Simple contact format
           return {
             content: `I can create a contact QR code with that information!\n\n📞 For the best experience, I'll need:\n• Full name\n• Phone number\n• Email address\n• Company (optional)\n\nPlease provide these details and I'll format them properly.`,
-            type: 'text'
+            type: 'text' as const
           };
         }
         
         setConversationContext({ awaitingContactDetails: true });
         return {
           content: "I'll help create a professional contact QR code! 📇\n\nWhat information should be included?\n• **Name**\n• **Phone number**\n• **Email address**\n• **Company/Title** (optional)\n• **Website** (optional)\n\nI'll format this as a vCard for easy contact saving.",
-          type: 'text',
+          type: 'text' as const,
           suggestions: ["John Doe, 555-123-4567, john@company.com", "Create digital business card"]
         };
 
       case 'event':
         return {
           content: "Perfect for events! 🎉 I can help create QR codes for:\n\n• **Event website** with details\n• **RSVP form** link\n• **Calendar invite** (ICS format)\n• **Location/directions**\n• **Photo sharing** album\n\nWhat's most important for your event? Share the details or URL you'd like to include.",
-          type: 'text',
+          type: 'text' as const,
           suggestions: ["Wedding details page", "Conference registration", "Party location"]
         };
 
@@ -174,21 +174,21 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
         if (detectedPlatform) {
           return {
             content: `Great choice for ${detectedPlatform}! 📱\n\nPlease share your ${detectedPlatform} profile URL or username.\n\nExample: '@yourusername' or 'https://${detectedPlatform}.com/yourusername'`,
-            type: 'text',
+            type: 'text' as const,
             suggestions: [`@myusername`, `Link all social profiles`]
           };
         }
         
         return {
           content: "Perfect for social media! 📱 I can create QR codes for:\n\n• **Instagram** profile\n• **Facebook** page\n• **Twitter/X** profile\n• **LinkedIn** profile\n• **TikTok** account\n• **All profiles** in one link\n\nWhich platform would you like to start with?",
-          type: 'text',
+          type: 'text' as const,
           suggestions: ["Instagram profile", "All social links", "LinkedIn business"]
         };
 
       default:
         return {
           content: "I can help you create QR codes for:\n\n📶 **WiFi networks** - Instant connection\n🌐 **Websites & URLs** - Direct access\n📞 **Contact information** - Save to contacts\n📅 **Events & calendars** - Add to calendar\n📱 **Social media** - Follow profiles\n💬 **Custom messages** - Any text\n\nWhat would you like to create today?",
-          type: 'text',
+          type: 'text' as const,
           suggestions: ["Create WiFi QR", "Add my website", "Share contact info", "Event details"]
         };
     }
