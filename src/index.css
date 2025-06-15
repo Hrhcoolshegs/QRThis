@@ -73,7 +73,26 @@
   }
 
   body {
-    @apply bg-black text-white font-inter;
+    @apply bg-background text-foreground font-inter;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  /* Security: Prevent content selection in sensitive areas */
+  .no-select {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Security: Hide sensitive content from screenshots */
+  .secure-content {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 }
 
@@ -96,12 +115,41 @@
     }
   }
 
-  /* Dark AI theme enhancements */
+  /* Light/Dark theme enhancements */
   .ai-glow {
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
   }
   
   .ai-glow:hover {
     box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);
+  }
+
+  .light .ai-glow {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+  }
+  
+  .light .ai-glow:hover {
+    box-shadow: 0 0 30px rgba(59, 130, 246, 0.2);
+  }
+
+  /* Security-focused utilities */
+  .secure-blur {
+    filter: blur(0px);
+    transition: filter 0.3s ease;
+  }
+
+  .secure-blur:not(:hover):not(:focus) {
+    filter: blur(4px);
+  }
+
+  /* Content Security */
+  .prevent-screenshot {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    pointer-events: none;
   }
 }
