@@ -23,7 +23,7 @@ function QRThisApp() {
               </h1>
               
               <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed">
-                The world's first AI-powered QR code generator. Smart conversations, perfect codes.
+                Type Anything. Get your QR Codes with AI precision
               </p>
             </div>
           </div>
