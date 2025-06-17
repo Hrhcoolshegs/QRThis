@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -7,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Globe, MessageSquare, Phone, Mail, MapPin, Calendar, User, CreditCard, AlertTriangle, Undo2 } from 'lucide-react';
+import { Wifi, Globe, MessageSquare, Phone, Mail, MapPin, Calendar, User, CreditCard, AlertTriangle, Undo2, Type } from 'lucide-react';
 import { validateURL, validateWiFiSSID, validateWiFiPassword, sanitizeTextInput } from '@/utils/securityUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -153,8 +152,40 @@ END:VCARD`;
 
   const handleTextChange = (value: string) => {
     clearValidationError('text');
-    const sanitized = sanitizeTextInput(value, 2000);
-    onInputChange(sanitized);
+    // Enhanced text handling - preserve formatting while sanitizing
+    const lines = value.split('\n');
+    const sanitizedLines = lines.map(line => sanitizeTextInput(line, 500));
+    const sanitized = sanitizedLines.join('\n');
+    
+    // Respect character limit
+    if (sanitized.length <= 2000) {
+      onInputChange(sanitized);
+    }
+  };
+
+  const formatText = (type: 'paragraph' | 'sentence' | 'list') => {
+    const text = activeTab === 'text' ? inputText : '';
+    let formatted = '';
+    
+    switch (type) {
+      case 'paragraph':
+        // Add double line breaks for paragraphs
+        formatted = text.replace(/\n/g, '\n\n');
+        break;
+      case 'sentence':
+        // Add proper spacing between sentences
+        formatted = text.replace(/([.!?])\s*/g, '$1 ').replace(/\s+/g, ' ');
+        break;
+      case 'list':
+        // Convert lines to bullet points
+        const lines = text.split('\n').filter(line => line.trim());
+        formatted = lines.map(line => `• ${line.trim()}`).join('\n');
+        break;
+    }
+    
+    if (formatted.length <= 2000) {
+      onInputChange(formatted);
+    }
   };
 
   const tabs = [
@@ -238,19 +269,69 @@ END:VCARD`;
 
           <TabsContent value="text" className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="text">Text Content</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="text">Text Content</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => formatText('sentence')}
+                    disabled={isGenerating || !inputText.trim()}
+                    title="Format as sentences"
+                  >
+                    <Type className="w-3 h-3 mr-1" />
+                    Sentences
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => formatText('paragraph')}
+                    disabled={isGenerating || !inputText.trim()}
+                    title="Format as paragraphs"
+                  >
+                    <Type className="w-3 h-3 mr-1" />
+                    Paragraphs
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => formatText('list')}
+                    disabled={isGenerating || !inputText.trim()}
+                    title="Format as bullet list"
+                  >
+                    <Type className="w-3 h-3 mr-1" />
+                    List
+                  </Button>
+                </div>
+              </div>
               <Textarea
                 id="text"
-                placeholder="Enter any text you want to encode..."
+                placeholder="Enter any text you want to encode...
+                
+You can format text into:
+• Multiple paragraphs
+• Separate sentences
+• Bullet point lists
+
+Use the formatting buttons above or type manually with line breaks!"
                 value={activeTab === 'text' ? inputText : ''}
                 onChange={(e) => handleTextChange(e.target.value)}
                 disabled={isGenerating}
-                rows={4}
+                rows={6}
                 maxLength={2000}
+                className="resize-none"
               />
+              <p className="text-xs text-gray-500">
+                💡 Tip: Press Enter for line breaks, use formatting buttons for quick styling
+              </p>
             </div>
           </TabsContent>
 
+          
+          
           <TabsContent value="wifi" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
