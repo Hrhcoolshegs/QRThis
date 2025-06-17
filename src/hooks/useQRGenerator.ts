@@ -31,7 +31,7 @@ interface UseQRGeneratorReturn {
 export function useQRGenerator({
   maxCharacters = 2000,
   debounceDelay = 300,
-  optimizationDelay = 2000
+  optimizationDelay = 5000 // Increased from 2000ms to 5000ms to be less intrusive
 }: UseQRGeneratorProps = {}): UseQRGeneratorReturn {
   const [inputText, setInputText] = useState('');
   const [originalText, setOriginalText] = useState('');
@@ -41,6 +41,7 @@ export function useQRGenerator({
   const [optimizationShown, setOptimizationShown] = useState(false);
   const [savedChars, setSavedChars] = useState(0);
   const [personalizedTips, setPersonalizedTips] = useState<string[]>([]);
+  const [lastTypingTime, setLastTypingTime] = useState<number>(0);
 
   // Memoized computed values for better performance
   const contentType = useMemo(() => detectContentType(inputText), [inputText]);
@@ -48,26 +49,31 @@ export function useQRGenerator({
   const characterCount = useMemo(() => inputText.length, [inputText]);
   const isOverLimit = useMemo(() => characterCount > maxCharacters, [characterCount, maxCharacters]);
 
-  // Auto-optimization effect with cleanup
+  // Auto-optimization effect with better timing control
   useEffect(() => {
     if (!inputText.trim() || optimizationShown) return;
     
+    const now = Date.now();
+    
+    // Only run optimization if user has stopped typing for the full delay period
     const timeoutId = setTimeout(() => {
-      const result = optimizeText(inputText);
-      if (result.saved > 0) {
-        setOriginalText(inputText);
-        setInputText(result.optimized);
-        setSavedChars(result.saved);
-        setOptimizationShown(true);
-        
-        // Auto-hide optimization badge
-        const hideTimeout = setTimeout(() => setOptimizationShown(false), 5000);
-        return () => clearTimeout(hideTimeout);
+      // Double-check if enough time has passed since last typing
+      if (Date.now() - lastTypingTime >= optimizationDelay) {
+        const result = optimizeText(inputText);
+        if (result.saved > 5) { // Only show optimization if it saves more than 5 characters
+          setOriginalText(inputText);
+          setInputText(result.optimized);
+          setSavedChars(result.saved);
+          setOptimizationShown(true);
+          
+          // Auto-hide optimization badge after 8 seconds
+          setTimeout(() => setOptimizationShown(false), 8000);
+        }
       }
     }, optimizationDelay);
 
     return () => clearTimeout(timeoutId);
-  }, [inputText, optimizationShown, optimizationDelay]);
+  }, [inputText, optimizationShown, optimizationDelay, lastTypingTime]);
 
   // Load personalized tips on mount only
   useEffect(() => {
@@ -132,18 +138,22 @@ export function useQRGenerator({
     setInputText(text);
     setOptimizationShown(false);
     setError(null); // Clear errors when input changes
+    setLastTypingTime(Date.now()); // Track when user last typed
   }, []);
 
-  // Optimized debounced QR generation
+  // Improved debounced QR generation with better performance for text input
   useEffect(() => {
+    // Use shorter debounce for text content to improve responsiveness
+    const actualDebounceDelay = contentType === 'text' ? 150 : debounceDelay;
+    
     const timeoutId = setTimeout(() => {
       if (inputText.trim()) {
         generateQRCode(inputText);
       }
-    }, debounceDelay);
+    }, actualDebounceDelay);
 
     return () => clearTimeout(timeoutId);
-  }, [inputText, generateQRCode, debounceDelay]);
+  }, [inputText, generateQRCode, debounceDelay, contentType]);
 
   return {
     inputText,

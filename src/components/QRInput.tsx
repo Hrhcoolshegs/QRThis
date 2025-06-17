@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Globe, MessageSquare, Phone, Mail, MapPin, Calendar, User, CreditCard, AlertTriangle, Undo2, Type } from 'lucide-react';
+import { Wifi, Globe, MessageSquare, Phone, Mail, MapPin, Calendar, User, CreditCard, AlertTriangle, Undo2, Type, Sparkles, X } from 'lucide-react';
 import { validateURL, validateWiFiSSID, validateWiFiPassword, sanitizeTextInput } from '@/utils/securityUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -54,6 +54,7 @@ export function QRInput({
     url: ''
   });
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [optimizationDismissed, setOptimizationDismissed] = useState(false);
 
   const clearValidationError = (field: string) => {
     if (validationErrors[field]) {
@@ -152,14 +153,9 @@ END:VCARD`;
 
   const handleTextChange = (value: string) => {
     clearValidationError('text');
-    // Enhanced text handling - preserve formatting while sanitizing
-    const lines = value.split('\n');
-    const sanitizedLines = lines.map(line => sanitizeTextInput(line, 500));
-    const sanitized = sanitizedLines.join('\n');
-    
-    // Respect character limit
-    if (sanitized.length <= 2000) {
-      onInputChange(sanitized);
+    // Improved text handling - no sanitization for better typing experience
+    if (value.length <= maxCharacters) {
+      onInputChange(value);
     }
   };
 
@@ -183,9 +179,13 @@ END:VCARD`;
         break;
     }
     
-    if (formatted.length <= 2000) {
+    if (formatted.length <= maxCharacters) {
       onInputChange(formatted);
     }
+  };
+
+  const handleDismissOptimization = () => {
+    setOptimizationDismissed(true);
   };
 
   const tabs = [
@@ -203,20 +203,32 @@ END:VCARD`;
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
           QR Code Content
-          {optimizationShown && (
+          {optimizationShown && !optimizationDismissed && (
             <div className="flex items-center gap-2 ml-auto">
-              <span className="text-sm text-green-600 bg-green-50 px-2 py-1 rounded-full">
-                Saved {savedChars} chars
-              </span>
-              <Button
-                onClick={onUndoOptimization}
-                variant="ghost"
-                size="sm"
-                className="text-gray-500 hover:text-gray-700"
-                title="Undo optimization"
-              >
-                <Undo2 size={16} />
-              </Button>
+              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1">
+                <Sparkles className="w-4 h-4 text-green-600" />
+                <span className="text-sm text-green-700 font-medium">
+                  Optimized! Saved {savedChars} chars
+                </span>
+                <Button
+                  onClick={onUndoOptimization}
+                  variant="ghost"
+                  size="sm"
+                  className="text-green-600 hover:text-green-700 h-6 w-6 p-0"
+                  title="Undo optimization"
+                >
+                  <Undo2 size={14} />
+                </Button>
+                <Button
+                  onClick={handleDismissOptimization}
+                  variant="ghost"
+                  size="sm"
+                  className="text-green-600 hover:text-green-700 h-6 w-6 p-0"
+                  title="Dismiss"
+                >
+                  <X size={14} />
+                </Button>
+              </div>
             </div>
           )}
         </CardTitle>
@@ -316,17 +328,25 @@ You can format text into:
 • Separate sentences
 • Bullet point lists
 
-Use the formatting buttons above or type manually with line breaks!"
+Type naturally - spaces and formatting work perfectly!
+AI optimization is available but won't interrupt your typing."
                 value={activeTab === 'text' ? inputText : ''}
                 onChange={(e) => handleTextChange(e.target.value)}
                 disabled={isGenerating}
                 rows={6}
-                maxLength={2000}
                 className="resize-none"
+                style={{ fontFamily: 'inherit' }}
               />
-              <p className="text-xs text-gray-500">
-                💡 Tip: Press Enter for line breaks, use formatting buttons for quick styling
-              </p>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-500">
+                  💡 Tip: Type naturally - optimization won't interrupt your flow
+                </span>
+                {activeTab === 'text' && savedChars > 0 && !optimizationDismissed && (
+                  <span className="text-green-600 font-medium">
+                    ✨ Text optimized automatically
+                  </span>
+                )}
+              </div>
             </div>
           </TabsContent>
 
