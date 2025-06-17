@@ -15,6 +15,7 @@ interface NotificationFormProps {
 
 export function NotificationForm({ feature, onSuccess }: NotificationFormProps) {
   const [formData, setFormData] = useState({
+    name: '',
     email: '',
     phone: ''
   });
@@ -43,6 +44,11 @@ export function NotificationForm({ feature, onSuccess }: NotificationFormProps) 
       }
     }
 
+    // Name validation (optional)
+    if (formData.name.trim() && formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -59,12 +65,15 @@ export function NotificationForm({ feature, onSuccess }: NotificationFormProps) 
       const sanitizedEmail = sanitizeTextInput(formData.email.trim(), 100);
       const sanitizedPhone = formData.phone.trim() ? 
         sanitizeTextInput(formData.phone.replace(/[\s-()]/g, ''), 20) : null;
+      const sanitizedName = formData.name.trim() ? 
+        sanitizeTextInput(formData.name.trim(), 50) : null;
 
       const { error } = await supabase
         .from('qrthis_notifications')
         .insert({
           email: sanitizedEmail,
           phone_number: sanitizedPhone,
+          name: sanitizedName,
           feature_requested: feature,
           user_agent: navigator.userAgent,
         });
@@ -107,6 +116,23 @@ export function NotificationForm({ feature, onSuccess }: NotificationFormProps) 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="name">Name (Optional)</Label>
+        <Input
+          id="name"
+          type="text"
+          placeholder="Your name"
+          value={formData.name}
+          onChange={(e) => handleInputChange('name', e.target.value)}
+          disabled={isSubmitting}
+          className={errors.name ? 'border-red-500' : ''}
+          maxLength={50}
+        />
+        {errors.name && (
+          <p className="text-sm text-red-500">{errors.name}</p>
+        )}
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="email">Email Address *</Label>
         <Input

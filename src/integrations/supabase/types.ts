@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      qrthis_notifications: {
+        Row: {
+          created_at: string
+          email: string
+          feature_requested: string
+          id: string
+          name: string | null
+          phone_number: string | null
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          feature_requested: string
+          id?: string
+          name?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          feature_requested?: string
+          id?: string
+          name?: string | null
+          phone_number?: string | null
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       waitlist: {
         Row: {
           email: string
