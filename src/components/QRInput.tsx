@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -6,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Globe, MessageSquare, Phone, Mail, MapPin, Calendar, User, CreditCard, AlertTriangle, Undo2, Type, Sparkles, X } from 'lucide-react';
+import { Wifi, Globe, MessageSquare, Phone, Mail, User, AlertTriangle, Undo2, X } from 'lucide-react';
 import { validateURL, validateWiFiSSID, validateWiFiPassword, sanitizeTextInput } from '@/utils/securityUtils';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -66,18 +67,32 @@ export function QRInput({
     }
   };
 
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhoneNumber = (phone: string): boolean => {
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
+    return phoneRegex.test(cleanPhone);
+  };
+
+  const hasValidationErrors = (): boolean => {
+    return Object.keys(validationErrors).length > 0;
+  };
+
   const handleURLChange = (value: string) => {
     clearValidationError('url');
-    const sanitized = sanitizeTextInput(value, 2048);
     
-    if (sanitized) {
-      const validation = validateURL(sanitized);
+    if (value) {
+      const validation = validateURL(value);
       if (!validation.isValid && validation.error) {
         setValidationErrors(prev => ({ ...prev, url: validation.error! }));
       }
     }
     
-    onInputChange(sanitized);
+    onInputChange(value);
   };
 
   const handleWiFiChange = (field: keyof typeof wifiData, value: any) => {
@@ -87,11 +102,7 @@ export function QRInput({
 
     // Validate SSID
     if (field === 'ssid') {
-      const sanitized = sanitizeTextInput(value, 32);
-      newWifiData.ssid = sanitized;
-      setWifiData(newWifiData);
-      
-      const validation = validateWiFiSSID(sanitized);
+      const validation = validateWiFiSSID(value);
       if (!validation.isValid && validation.error) {
         setValidationErrors(prev => ({ ...prev, wifi_ssid: validation.error! }));
         return;
@@ -100,11 +111,7 @@ export function QRInput({
 
     // Validate password
     if (field === 'password') {
-      const sanitized = sanitizeTextInput(value, 63);
-      newWifiData.password = sanitized;
-      setWifiData(newWifiData);
-      
-      const validation = validateWiFiPassword(sanitized, newWifiData.security);
+      const validation = validateWiFiPassword(value, newWifiData.security);
       if (!validation.isValid && validation.error) {
         setValidationErrors(prev => ({ ...prev, wifi_password: validation.error! }));
         return;
@@ -118,21 +125,28 @@ export function QRInput({
 
   const handleContactChange = (field: keyof typeof contactData, value: string) => {
     clearValidationError(`contact_${field}`);
-    const sanitized = sanitizeTextInput(value, 100);
-    const newContactData = { ...contactData, [field]: sanitized };
+    const newContactData = { ...contactData, [field]: value };
     setContactData(newContactData);
 
-    // Special validation for email and URL fields
-    if (field === 'email' && sanitized) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(sanitized)) {
-        setValidationErrors(prev => ({ ...prev, contact_email: 'Invalid email format' }));
+    // Validate email
+    if (field === 'email' && value) {
+      if (!validateEmail(value)) {
+        setValidationErrors(prev => ({ ...prev, contact_email: 'Please enter a valid email address' }));
         return;
       }
     }
 
-    if (field === 'url' && sanitized) {
-      const validation = validateURL(sanitized);
+    // Validate phone
+    if (field === 'phone' && value) {
+      if (!validatePhoneNumber(value)) {
+        setValidationErrors(prev => ({ ...prev, contact_phone: 'Please enter a valid phone number' }));
+        return;
+      }
+    }
+
+    // Validate URL
+    if (field === 'url' && value) {
+      const validation = validateURL(value);
       if (!validation.isValid && validation.error) {
         setValidationErrors(prev => ({ ...prev, contact_url: validation.error }));
         return;
@@ -153,40 +167,38 @@ END:VCARD`;
 
   const handleTextChange = (value: string) => {
     clearValidationError('text');
-    // Improved text handling - no sanitization for better typing experience
-    if (value.length <= maxCharacters) {
-      onInputChange(value);
-    }
+    onInputChange(value);
   };
 
-  const formatText = (type: 'paragraph' | 'sentence' | 'list') => {
-    const text = activeTab === 'text' ? inputText : '';
-    let formatted = '';
+  const handleEmailChange = (value: string) => {
+    clearValidationError('email');
     
-    switch (type) {
-      case 'paragraph':
-        // Add double line breaks for paragraphs
-        formatted = text.replace(/\n/g, '\n\n');
-        break;
-      case 'sentence':
-        // Add proper spacing between sentences
-        formatted = text.replace(/([.!?])\s*/g, '$1 ').replace(/\s+/g, ' ');
-        break;
-      case 'list':
-        // Convert lines to bullet points
-        const lines = text.split('\n').filter(line => line.trim());
-        formatted = lines.map(line => `• ${line.trim()}`).join('\n');
-        break;
+    if (value) {
+      if (!validateEmail(value)) {
+        setValidationErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
+      }
     }
     
-    if (formatted.length <= maxCharacters) {
-      onInputChange(formatted);
+    onInputChange(`mailto:${value}`);
+  };
+
+  const handlePhoneChange = (value: string) => {
+    clearValidationError('phone');
+    
+    if (value) {
+      if (!validatePhoneNumber(value)) {
+        setValidationErrors(prev => ({ ...prev, phone: 'Please enter a valid phone number (e.g., +1234567890)' }));
+      }
     }
+    
+    onInputChange(`tel:${value}`);
   };
 
   const handleDismissOptimization = () => {
     setOptimizationDismissed(true);
   };
+
+  const canGenerate = !isGenerating && !isOverLimit && inputText.trim() && !hasValidationErrors();
 
   const tabs = [
     { id: 'url', label: 'URL', icon: Globe },
@@ -206,7 +218,6 @@ END:VCARD`;
           {optimizationShown && !optimizationDismissed && (
             <div className="flex items-center gap-2 ml-auto">
               <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1">
-                <Sparkles className="w-4 h-4 text-green-600" />
                 <span className="text-sm text-green-700 font-medium">
                   Optimized! Saved {savedChars} chars
                 </span>
@@ -281,76 +292,18 @@ END:VCARD`;
 
           <TabsContent value="text" className="space-y-4">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="text">Text Content</Label>
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => formatText('sentence')}
-                    disabled={isGenerating || !inputText.trim()}
-                    title="Format as sentences"
-                  >
-                    <Type className="w-3 h-3 mr-1" />
-                    Sentences
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => formatText('paragraph')}
-                    disabled={isGenerating || !inputText.trim()}
-                    title="Format as paragraphs"
-                  >
-                    <Type className="w-3 h-3 mr-1" />
-                    Paragraphs
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => formatText('list')}
-                    disabled={isGenerating || !inputText.trim()}
-                    title="Format as bullet list"
-                  >
-                    <Type className="w-3 h-3 mr-1" />
-                    List
-                  </Button>
-                </div>
-              </div>
+              <Label htmlFor="text">Text Content</Label>
               <Textarea
                 id="text"
-                placeholder="Enter any text you want to encode...
-                
-You can format text into:
-• Multiple paragraphs
-• Separate sentences
-• Bullet point lists
-
-Type naturally - spaces and formatting work perfectly!
-AI optimization is available but won't interrupt your typing."
+                placeholder="Enter any text you want to encode..."
                 value={activeTab === 'text' ? inputText : ''}
                 onChange={(e) => handleTextChange(e.target.value)}
                 disabled={isGenerating}
                 rows={6}
                 className="resize-none"
-                style={{ fontFamily: 'inherit' }}
               />
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-gray-500">
-                  💡 Tip: Type naturally - optimization won't interrupt your flow
-                </span>
-                {activeTab === 'text' && savedChars > 0 && !optimizationDismissed && (
-                  <span className="text-green-600 font-medium">
-                    ✨ Text optimized automatically
-                  </span>
-                )}
-              </div>
             </div>
           </TabsContent>
-
-          
           
           <TabsContent value="wifi" className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -442,7 +395,14 @@ AI optimization is available but won't interrupt your typing."
                   onChange={(e) => handleContactChange('phone', e.target.value)}
                   disabled={isGenerating}
                   maxLength={20}
+                  className={validationErrors.contact_phone ? 'border-red-500' : ''}
                 />
+                {validationErrors.contact_phone && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>{validationErrors.contact_phone}</AlertDescription>
+                  </Alert>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="contact-email">Email</Label>
@@ -493,13 +453,17 @@ AI optimization is available but won't interrupt your typing."
                 type="tel"
                 placeholder="+1234567890"
                 value={activeTab === 'phone' ? inputText.replace('tel:', '') : ''}
-                onChange={(e) => {
-                  const sanitized = sanitizeTextInput(e.target.value, 20);
-                  onInputChange(`tel:${sanitized}`);
-                }}
+                onChange={(e) => handlePhoneChange(e.target.value)}
                 disabled={isGenerating}
                 maxLength={20}
+                className={validationErrors.phone ? 'border-red-500' : ''}
               />
+              {validationErrors.phone && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{validationErrors.phone}</AlertDescription>
+                </Alert>
+              )}
               <p className="text-sm text-gray-500">
                 Include country code for international numbers
               </p>
@@ -514,13 +478,17 @@ AI optimization is available but won't interrupt your typing."
                 type="email"
                 placeholder="someone@example.com"
                 value={activeTab === 'email' ? inputText.replace('mailto:', '') : ''}
-                onChange={(e) => {
-                  const sanitized = sanitizeTextInput(e.target.value, 100);
-                  onInputChange(`mailto:${sanitized}`);
-                }}
+                onChange={(e) => handleEmailChange(e.target.value)}
                 disabled={isGenerating}
                 maxLength={100}
+                className={validationErrors.email ? 'border-red-500' : ''}
               />
+              {validationErrors.email && (
+                <Alert variant="destructive">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription>{validationErrors.email}</AlertDescription>
+                </Alert>
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -528,12 +496,20 @@ AI optimization is available but won't interrupt your typing."
         <div className="mt-6 flex justify-center">
           <Button
             onClick={onGenerate}
-            disabled={isGenerating || isOverLimit || !inputText.trim()}
+            disabled={!canGenerate}
             className="w-full md:w-auto px-8 py-2"
           >
             {isGenerating ? 'Generating...' : 'Generate QR Code'}
           </Button>
         </div>
+
+        {hasValidationErrors() && (
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700 font-medium">
+              Please fix the validation errors above before generating your QR code.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
