@@ -20,7 +20,7 @@ export function Navigation() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 dark:bg-black/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/40 shadow-sm">
+    <header className="sticky top-0 z-40 bg-white/95 dark:bg-black/90 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700/40 shadow-sm">
       <div className="container max-w-7xl mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           <Link to="/" className="flex items-center space-x-3" onClick={closeMobileMenu}>
@@ -32,7 +32,7 @@ export function Navigation() {
                 QRThis
               </h1>
               <span className="text-xs bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-2 py-1 rounded-full font-semibold">
-                AI-POWERED
+                AI
               </span>
             </div>
           </Link>
@@ -63,6 +63,14 @@ export function Navigation() {
                 }`}
               >
                 Pricing
+              </Link>
+              <Link 
+                to="/faq" 
+                className={`text-sm font-medium transition-colors hover:text-indigo-600 dark:hover:text-blue-400 ${
+                  isActive('/faq') ? 'text-indigo-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                FAQ
               </Link>
             </nav>
 
@@ -111,6 +119,24 @@ export function Navigation() {
                 }`}
               >
                 Pricing
+              </Link>
+              <Link 
+                to="/faq" 
+                onClick={closeMobileMenu}
+                className={`text-base font-medium transition-colors hover:text-indigo-600 dark:hover:text-blue-400 ${
+                  isActive('/faq') ? 'text-indigo-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                FAQ
+              </Link>
+              <Link 
+                to="/about" 
+                onClick={closeMobileMenu}
+                className={`text-base font-medium transition-colors hover:text-indigo-600 dark:hover:text-blue-400 ${
+                  isActive('/about') ? 'text-indigo-600 dark:text-blue-400' : 'text-gray-700 dark:text-gray-300'
+                }`}
+              >
+                About
               </Link>
             </nav>
           </div>
