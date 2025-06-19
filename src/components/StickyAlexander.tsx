@@ -77,7 +77,6 @@ export function StickyAlexander() {
               <div className="h-96 overflow-hidden">
                 <AIAssistant 
                   onContentGenerated={() => {}} 
-                  isSticky={true}
                 />
               </div>
             </CardContent>
