@@ -3,7 +3,6 @@ import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { Navigation } from '@/components/Navigation';
 import { QRGenerator } from '@/components/QRGenerator';
-import { BatchProcessor } from '@/components/BatchProcessor';
 
 function QRThisApp() {
   return (
@@ -31,25 +30,12 @@ function QRThisApp() {
         </section>
 
         {/* Main QR Generator Section */}
-        <section id="generator" className="py-16">
+        <section id="generator" className="py-8">
           <QRGenerator />
-        </section>
-
-        {/* Smart Batch Processing Section */}
-        <section className="py-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-              Smart Batch Processing
-            </h2>
-            <p className="text-lg text-gray-700 dark:text-gray-300 max-w-2xl mx-auto">
-              Process multiple URLs, contacts, or text items automatically with AI separation
-            </p>
-          </div>
-          <BatchProcessor onBatchGenerate={() => {}} />
         </section>
       </main>
 
-      {/* Simple Footer */}
+      {/* Footer - matching other pages */}
       <footer className="bg-gradient-to-r from-gray-900 via-black to-gray-900 border-t border-gray-800 mt-20">
         <div className="container max-w-7xl mx-auto px-4 py-8">
           <div className="text-center">
