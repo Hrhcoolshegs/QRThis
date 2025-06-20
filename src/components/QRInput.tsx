@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -198,6 +197,13 @@ END:VCARD`;
     setOptimizationDismissed(true);
   };
 
+  const handleGenerateClick = async () => {
+    if (hasValidationErrors()) {
+      return; // Block generation if there are validation errors
+    }
+    await onGenerate();
+  };
+
   const canGenerate = !isGenerating && !isOverLimit && inputText.trim() && !hasValidationErrors();
 
   const tabs = [
@@ -214,7 +220,7 @@ END:VCARD`;
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <MessageSquare className="w-5 h-5" />
-          QR Code Content
+          Enter Your Content
           {optimizationShown && !optimizationDismissed && (
             <div className="flex items-center gap-2 ml-auto">
               <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1">
@@ -248,9 +254,6 @@ END:VCARD`;
           <div className="flex items-center justify-between mt-2">
             <span className={`text-sm ${isOverLimit ? 'text-red-500' : 'text-gray-500'}`}>
               {characterCount}/{maxCharacters} characters
-            </span>
-            <span className="text-xs text-gray-400">
-              Type: {contentType} | Error Correction: {errorCorrectionLevel}
             </span>
           </div>
         </CardDescription>
@@ -495,16 +498,17 @@ END:VCARD`;
 
         <div className="mt-6 flex justify-center">
           <Button
-            onClick={onGenerate}
+            onClick={handleGenerateClick}
             disabled={!canGenerate}
-            className="w-full md:w-auto px-8 py-2"
+            className="w-full md:w-auto px-8 py-3 text-lg font-semibold"
+            size="lg"
           >
-            {isGenerating ? 'Generating...' : 'Generate QR Code'}
+            {isGenerating ? 'Generating QR Code...' : 'Generate QR Code'}
           </Button>
         </div>
 
         {hasValidationErrors() && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-sm text-red-700 font-medium">
               Please fix the validation errors above before generating your QR code.
             </p>
