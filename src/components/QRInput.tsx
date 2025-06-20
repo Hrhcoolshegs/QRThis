@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
-import { QrCode, AlertCircle, CheckCircle, Undo2, Loader2, Globe, Mail, MessageSquare, Smartphone } from 'lucide-react';
+import { QrCode, AlertCircle, CheckCircle, Undo2, Loader2, Globe, Mail, MessageSquare, Smartphone, Wifi, User } from 'lucide-react';
 import { optimizeText, detectContentType } from '@/utils/smartOptimization';
 import { validateQRContent } from '@/utils/securityUtils';
 
@@ -21,20 +23,13 @@ interface QRInputProps {
   errorCorrectionLevel: string;
 }
 
-const contentTypeIcons = {
-  'url': Globe,
-  'email': Mail,
-  'phone': Smartphone,
-  'text': MessageSquare,
-  'sms': MessageSquare,
-  'wifi': Globe
-};
-
-const quickActions = [
-  { label: 'Website URL', placeholder: 'https://example.com', icon: Globe },
-  { label: 'Email', placeholder: 'hello@example.com', icon: Mail },
-  { label: 'Phone', placeholder: '+1 (555) 123-4567', icon: Smartphone },
-  { label: 'Text', placeholder: 'Your message here...', icon: MessageSquare }
+const contentTypes = [
+  { id: 'url', label: 'URL', icon: Globe, placeholder: 'https://example.com' },
+  { id: 'text', label: 'Text', icon: MessageSquare, placeholder: 'Your message here...' },
+  { id: 'wifi', label: 'WiFi', icon: Wifi, placeholder: 'Network name and password' },
+  { id: 'contact', label: 'Contact', icon: User, placeholder: 'Contact information' },
+  { id: 'phone', label: 'Phone', icon: Smartphone, placeholder: '+1 (555) 123-4567' },
+  { id: 'email', label: 'Email', icon: Mail, placeholder: 'hello@example.com' }
 ];
 
 export function QRInput({
@@ -54,11 +49,12 @@ export function QRInput({
   const [isValid, setIsValid] = useState(true);
   const [validationError, setValidationError] = useState<string>('');
   const [isFocused, setIsFocused] = useState(false);
+  const [activeTab, setActiveTab] = useState('url');
 
   // Validate input in real-time
   useEffect(() => {
     if (!inputText.trim()) {
-      setIsValid(true); // Don't show error for empty input
+      setIsValid(true);
       setValidationError('');
       return;
     }
@@ -85,7 +81,7 @@ export function QRInput({
     if (!inputText.trim()) {
       toast({
         title: "Input Required",
-        description: "Please enter some text or URL to generate a QR code",
+        description: "Please enter some content to generate a QR code",
         variant: "destructive"
       });
       return;
@@ -112,89 +108,162 @@ export function QRInput({
     onGenerate();
   };
 
-  const handleQuickAction = (placeholder: string) => {
-    onInputChange(placeholder);
-    setIsFocused(true);
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    const selectedType = contentTypes.find(type => type.id === value);
+    if (selectedType) {
+      onInputChange(selectedType.placeholder);
+      setIsFocused(true);
+    }
   };
 
-  const ContentTypeIcon = contentTypeIcons[contentType as keyof typeof contentTypeIcons] || MessageSquare;
-
-  return (
-    <div className="space-y-6">
-      {/* Smart Input Section */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <label htmlFor="qr-input" className="block text-lg font-semibold text-gray-900 dark:text-white">
-            What would you like to share?
-          </label>
-          {inputText.trim() && (
-            <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
-              <ContentTypeIcon size={16} />
-              <span className="capitalize">{contentType}</span>
-            </div>
-          )}
-        </div>
-
-        {/* Quick Action Buttons */}
-        {!inputText.trim() && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
-            {quickActions.map((action) => (
-              <button
-                key={action.label}
-                onClick={() => handleQuickAction(action.placeholder)}
-                className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/50 transition-all duration-200 text-left group"
-              >
-                <action.icon size={18} className="text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform" />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{action.label}</span>
-              </button>
-            ))}
+  const renderInputField = (type: any) => {
+    if (type.id === 'wifi') {
+      return (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Network Name (SSID)
+            </label>
+            <Input
+              placeholder="My WiFi Network"
+              className="w-full"
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
           </div>
-        )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Password
+            </label>
+            <Input
+              type="password"
+              placeholder="Enter WiFi password"
+              className="w-full"
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+            />
+          </div>
+        </div>
+      );
+    }
 
-        {/* Enhanced Input Field */}
-        <div className="relative">
-          <div className={`relative rounded-2xl transition-all duration-300 ${
-            isFocused || inputText.trim() 
-              ? 'ring-2 ring-blue-500/20 shadow-lg scale-[1.02]' 
-              : 'shadow-md hover:shadow-lg'
-          }`}>
+    if (type.id === 'contact') {
+      return (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                First Name
+              </label>
+              <Input placeholder="John" className="w-full" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Last Name
+              </label>
+              <Input placeholder="Doe" className="w-full" />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Phone
+            </label>
+            <Input placeholder="+1 (555) 123-4567" className="w-full" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Email
+            </label>
+            <Input placeholder="john@example.com" className="w-full" />
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="relative">
+        <div className={`relative rounded-2xl transition-all duration-300 ${
+          isFocused || inputText.trim() 
+            ? 'ring-2 ring-blue-500/20 shadow-lg scale-[1.02]' 
+            : 'shadow-md hover:shadow-lg'
+        }`}>
+          {type.id === 'text' ? (
             <textarea
-              id="qr-input"
               value={inputText}
               onChange={(e) => onInputChange(e.target.value)}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
-              placeholder="Type or paste your content here... (URL, text, email, phone number)"
+              placeholder={type.placeholder}
               className={`w-full h-32 p-6 border-2 rounded-2xl resize-none focus:outline-none transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 text-lg ${
                 !isValid && inputText.trim()
                   ? 'border-red-300 focus:border-red-500'
                   : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'
               }`}
             />
-            
-            {/* Character Counter */}
+          ) : (
+            <Input
+              value={inputText}
+              onChange={(e) => onInputChange(e.target.value)}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
+              placeholder={type.placeholder}
+              className={`w-full h-16 p-6 border-2 rounded-2xl focus:outline-none transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 text-lg ${
+                !isValid && inputText.trim()
+                  ? 'border-red-300 focus:border-red-500'
+                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'
+              }`}
+            />
+          )}
+          
+          {/* Character Counter */}
+          {inputText.trim() && (
             <div className="absolute bottom-4 right-4 flex items-center space-x-3">
-              {inputText.trim() && (
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  characterCount > maxCharacters 
-                    ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-                }`}>
-                  {characterCount}/{maxCharacters}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Validation Error */}
-          {!isValid && inputText.trim() && (
-            <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-sm mt-2 animate-fade-in">
-              <AlertCircle size={16} />
-              <span>{validationError}</span>
+              <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                characterCount > maxCharacters 
+                  ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' 
+                  : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
+              }`}>
+                {characterCount}/{maxCharacters}
+              </div>
             </div>
           )}
         </div>
+
+        {/* Validation Error */}
+        {!isValid && inputText.trim() && (
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-sm mt-2 animate-fade-in">
+            <AlertCircle size={16} />
+            <span>{validationError}</span>
+          </div>
+        )}
       </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Tab-based Interface */}
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="grid w-full grid-cols-6 bg-gray-100 dark:bg-gray-800 rounded-2xl p-1">
+          {contentTypes.map((type) => (
+            <TabsTrigger
+              key={type.id}
+              value={type.id}
+              className="flex items-center space-x-2 px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 data-[state=active]:bg-white data-[state=active]:shadow-sm dark:data-[state=active]:bg-gray-700"
+            >
+              <type.icon size={16} />
+              <span className="hidden sm:inline">{type.label}</span>
+            </TabsTrigger>
+          ))}
+        </TabsList>
+
+        {contentTypes.map((type) => (
+          <TabsContent key={type.id} value={type.id} className="mt-6">
+            {renderInputField(type)}
+          </TabsContent>
+        ))}
+      </Tabs>
 
       {/* Optimization Banner */}
       {optimizationShown && savedChars > 0 && (
