@@ -49,27 +49,6 @@ export const validateURL = (url: string): { isValid: boolean; error?: string } =
       }
     }
 
-    // Check for private network addresses (enhanced)
-    if (urlObject.protocol === 'http:' || urlObject.protocol === 'https:') {
-      const hostname = urlObject.hostname.toLowerCase();
-      const privatePatterns = [
-        /^localhost$/,
-        /^127\./,
-        /^192\.168\./,
-        /^10\./,
-        /^172\.(1[6-9]|2[0-9]|3[0-1])\./,
-        /^169\.254\./, // Link-local
-        /^::1$/, // IPv6 localhost
-        /^fc00:/, // IPv6 unique local
-        /^fe80:/ // IPv6 link-local
-      ];
-
-      const isPrivate = privatePatterns.some(pattern => pattern.test(hostname));
-      if (isPrivate && process.env.NODE_ENV === 'production') {
-        return { isValid: false, error: 'Private network URLs not allowed' };
-      }
-    }
-
     return { isValid: true };
   } catch (error) {
     return { isValid: false, error: 'Invalid URL format' };
@@ -101,60 +80,56 @@ export const sanitizeTextInput = (input: string, maxLength: number = 2000): stri
   return sanitized;
 };
 
-// Enhanced WiFi network name validation
-export const validateWiFiSSID = (ssid: string): { isValid: boolean; error?: string } => {
-  if (!ssid || typeof ssid !== 'string') {
-    return { isValid: false, error: 'Network name is required' };
+// Enhanced content validation for QR codes
+export const validateQRContent = (content: string, type: string): { isValid: boolean; sanitized?: string; error?: string } => {
+  if (!content || typeof content !== 'string') {
+    return { isValid: false, error: 'Content is required' };
   }
 
-  const trimmed = ssid.trim();
-  
-  if (trimmed.length === 0) {
-    return { isValid: false, error: 'Network name cannot be empty' };
+  // Check for excessive length
+  if (content.length > 2000) {
+    return { isValid: false, error: 'Content exceeds maximum length' };
   }
 
-  if (trimmed.length > 32) {
-    return { isValid: false, error: 'Network name cannot exceed 32 characters' };
+  let sanitized = content;
+  let validation = { isValid: true };
+
+  switch (type) {
+    case 'url':
+      validation = validateURL(content);
+      break;
+    case 'text':
+      sanitized = sanitizeTextInput(content);
+      // Additional checks for text content
+      if (sanitized.length === 0 && content.length > 0) {
+        return { isValid: false, error: 'Content contains only unsafe characters' };
+      }
+      break;
+    case 'email':
+      const emailContent = content.replace('mailto:', '');
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(emailContent)) {
+        return { isValid: false, error: 'Invalid email format' };
+      }
+      sanitized = `mailto:${sanitizeTextInput(emailContent, 100)}`;
+      break;
+    case 'phone':
+      const phoneContent = content.replace('tel:', '');
+      const phoneRegex = /^\+?[1-9]\d{1,14}$/;
+      if (!phoneRegex.test(phoneContent.replace(/[\s-()]/g, ''))) {
+        return { isValid: false, error: 'Invalid phone number format' };
+      }
+      sanitized = `tel:${sanitizeTextInput(phoneContent, 20)}`;
+      break;
+    default:
+      sanitized = sanitizeTextInput(content);
   }
 
-  // Enhanced invalid character check
-  const invalidChars = /[<>"&'\\]/;
-  if (invalidChars.test(trimmed)) {
-    return { isValid: false, error: 'Network name contains invalid characters' };
+  if (!validation.isValid) {
+    return validation;
   }
 
-  // Check for control characters
-  if (/[\x00-\x1F\x7F]/.test(trimmed)) {
-    return { isValid: false, error: 'Network name contains control characters' };
-  }
-
-  return { isValid: true };
-};
-
-// Enhanced password strength validation
-export const validateWiFiPassword = (password: string, securityType: string): { isValid: boolean; error?: string } => {
-  if (securityType === 'nopass') {
-    return { isValid: true };
-  }
-
-  if (!password || typeof password !== 'string') {
-    return { isValid: false, error: 'Password is required for secured networks' };
-  }
-
-  if (password.length < 8) {
-    return { isValid: false, error: 'Password must be at least 8 characters' };
-  }
-
-  if (password.length > 63) {
-    return { isValid: false, error: 'Password cannot exceed 63 characters' };
-  }
-
-  // Check for control characters
-  if (/[\x00-\x1F\x7F]/.test(password)) {
-    return { isValid: false, error: 'Password contains invalid characters' };
-  }
-
-  return { isValid: true };
+  return { isValid: true, sanitized };
 };
 
 // Enhanced rate limiting with better tracking
@@ -221,61 +196,25 @@ export class RateLimiter {
   }
 }
 
-// Enhanced content validation for QR codes
-export const validateQRContent = (content: string, type: string): { isValid: boolean; sanitized?: string; error?: string } => {
-  if (!content || typeof content !== 'string') {
-    return { isValid: false, error: 'Content is required' };
-  }
-
-  // Check for excessive length
-  if (content.length > 2000) {
-    return { isValid: false, error: 'Content exceeds maximum length' };
-  }
-
-  let sanitized = content;
-  let validation = { isValid: true };
-
-  switch (type) {
-    case 'url':
-      validation = validateURL(content);
-      break;
-    case 'text':
-      sanitized = sanitizeTextInput(content);
-      // Additional checks for text content
-      if (sanitized.length === 0 && content.length > 0) {
-        return { isValid: false, error: 'Content contains only unsafe characters' };
-      }
-      break;
-    case 'wifi':
-      // WiFi validation would be handled separately for SSID and password
-      sanitized = sanitizeTextInput(content);
-      break;
-    case 'email':
-      const emailContent = content.replace('mailto:', '');
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailContent)) {
-        return { isValid: false, error: 'Invalid email format' };
-      }
-      sanitized = `mailto:${sanitizeTextInput(emailContent, 100)}`;
-      break;
-    case 'phone':
-      const phoneContent = content.replace('tel:', '');
-      const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-      if (!phoneRegex.test(phoneContent.replace(/[\s-()]/g, ''))) {
-        return { isValid: false, error: 'Invalid phone number format' };
-      }
-      sanitized = `tel:${sanitizeTextInput(phoneContent, 20)}`;
-      break;
-    default:
-      sanitized = sanitizeTextInput(content);
-  }
-
-  if (!validation.isValid) {
-    return validation;
-  }
-
-  return { isValid: true, sanitized };
+// Content type detection patterns
+const contentTypes = {
+  url: /^https?:\/\/.+/i,
+  email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+  phone: /^[\+]?[\d\s\-\(\)]{10,}$/,
+  wifi: /^WIFI:T:.+;S:.+;P:.+;;$/,
+  vcard: /^BEGIN:VCARD/i,
+  coordinates: /^geo:-?\d+\.\d+,-?\d+\.\d+/
 };
+
+export function detectContentType(text: string): string {
+  const trimmed = text.trim();
+  for (const [type, pattern] of Object.entries(contentTypes)) {
+    if (pattern.test(trimmed)) {
+      return type;
+    }
+  }
+  return 'text';
+}
 
 // Enhanced XSS prevention
 export const preventXSS = (input: string): string => {
@@ -297,19 +236,4 @@ export const preventXSS = (input: string): string => {
   });
 
   return cleaned;
-};
-
-// Content Security Policy validation
-export const validateCSP = (content: string): boolean => {
-  const dangerousPatterns = [
-    /eval\s*\(/gi,
-    /Function\s*\(/gi,
-    /setTimeout\s*\(/gi,
-    /setInterval\s*\(/gi,
-    /document\.write/gi,
-    /innerHTML/gi,
-    /outerHTML/gi
-  ];
-
-  return !dangerousPatterns.some(pattern => pattern.test(content));
 };

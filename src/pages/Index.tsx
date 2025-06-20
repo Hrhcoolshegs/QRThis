@@ -3,6 +3,7 @@ import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { Navigation } from '@/components/Navigation';
 import { QRGenerator } from '@/components/QRGenerator';
+import { Linkedin } from 'lucide-react';
 
 function QRThisApp() {
   return (
@@ -35,51 +36,78 @@ function QRThisApp() {
         </section>
       </main>
 
-      {/* Footer - matching features and pricing pages */}
+      {/* Enhanced Footer matching features/pricing pages */}
       <footer className="bg-gradient-to-r from-gray-900 via-black to-gray-900 border-t border-gray-800 mt-20">
         <div className="container max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {/* Brand */}
             <div className="space-y-4">
-              <h3 className="text-xl font-bold text-white">QRThis</h3>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">Q</span>
+                </div>
+                <h3 className="text-xl font-bold text-white">QRThis</h3>
+                <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full">AI-POWERED</span>
+              </div>
               <p className="text-gray-400 text-sm">
-                Create unlimited QR codes with AI precision. Fast, secure, and always free.
+                The most advanced AI-powered QR code generator. Create unlimited QR codes with perfect precision and artistic flair.
               </p>
+              <div className="flex items-center space-x-2 text-gray-400 text-sm">
+                <span>📧</span>
+                <a href="mailto:contactqrthis@gmail.com" className="hover:text-white transition-colors">
+                  contactqrthis@gmail.com
+                </a>
+              </div>
             </div>
 
-            {/* Product */}
+            {/* Quick Links */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-white">Product</h4>
+              <h4 className="font-semibold text-white">Quick Links</h4>
               <ul className="space-y-2 text-sm text-gray-400">
+                <li><a href="#generator" className="hover:text-white transition-colors">QR Generator</a></li>
                 <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#generator" className="hover:text-white transition-colors">QR Generator</a></li>
               </ul>
             </div>
 
-            {/* Support */}
+            {/* Features */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-white">Support</h4>
+              <h4 className="font-semibold text-white">Features</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
+                  <span>AI Art QR Codes</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                  <span>Unlimited Generation</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                  <span>Privacy First</span>
+                </li>
+                <li className="flex items-center space-x-2">
+                  <span className="w-2 h-2 bg-cyan-500 rounded-full"></span>
+                  <span>Mobile Optimized</span>
+                </li>
               </ul>
             </div>
 
-            {/* Legal */}
+            {/* Creator */}
             <div className="space-y-4">
-              <h4 className="font-semibold text-white">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Terms of Service</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Cookie Policy</a></li>
-              </ul>
+              <h4 className="font-semibold text-white">Made with ❤️ by</h4>
+              <div className="flex items-center justify-between">
+                <span className="text-gray-400 text-sm">Oluwasegun Akinshola Lawrence</span>
+                <a href="https://linkedin.com/in/oluwasegun-akinshola-lawrence" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
+                  <Linkedin size={20} />
+                </a>
+              </div>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center">
-            <p className="text-gray-400 text-sm">© 2024 QRThis. Create unlimited QR codes with AI precision.</p>
+          <div className="border-t border-gray-800 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm text-gray-400">
+            <p>© 2024 QRThis. All rights reserved.</p>
+            <p>AI-powered, privacy-first, always free</p>
           </div>
         </div>
       </footer>

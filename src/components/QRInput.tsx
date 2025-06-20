@@ -1,19 +1,14 @@
-import React, { useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Wifi, Globe, MessageSquare, Phone, Mail, User, AlertTriangle, Undo2, X } from 'lucide-react';
-import { validateURL, validateWiFiSSID, validateWiFiPassword, sanitizeTextInput } from '@/utils/securityUtils';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from "@/hooks/use-toast";
+import { QrCode, AlertCircle, CheckCircle, Undo2, Loader2 } from 'lucide-react';
+import { optimizeText, detectContentType } from '@/utils/smartOptimization';
+import { validateQRContent } from '@/utils/securityUtils';
 
 interface QRInputProps {
   inputText: string;
   onInputChange: (text: string) => void;
-  onGenerate: () => Promise<void>;
+  onGenerate: () => void;
   isGenerating: boolean;
   isOverLimit: boolean;
   characterCount: number;
@@ -22,499 +17,180 @@ interface QRInputProps {
   savedChars: number;
   onUndoOptimization: () => void;
   contentType: string;
-  errorCorrectionLevel: 'L' | 'M' | 'Q' | 'H';
+  errorCorrectionLevel: string;
 }
 
-export function QRInput({ 
-  inputText, 
-  onInputChange, 
+export function QRInput({
+  inputText,
+  onInputChange,
   onGenerate,
-  isGenerating, 
+  isGenerating,
   isOverLimit,
   characterCount,
   maxCharacters,
   optimizationShown,
   savedChars,
   onUndoOptimization,
-  contentType,
-  errorCorrectionLevel
 }: QRInputProps) {
-  const [activeTab, setActiveTab] = useState('url');
-  const [wifiData, setWifiData] = useState({
-    ssid: '',
-    password: '',
-    security: 'WPA',
-    hidden: false
-  });
-  const [contactData, setContactData] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    organization: '',
-    url: ''
-  });
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
-  const [optimizationDismissed, setOptimizationDismissed] = useState(false);
+  const { toast } = useToast();
+  const [isValid, setIsValid] = useState(true);
+  const [validationError, setValidationError] = useState<string>('');
 
-  const clearValidationError = (field: string) => {
-    if (validationErrors[field]) {
-      setValidationErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors[field];
-        return newErrors;
+  // Validate input in real-time
+  useEffect(() => {
+    if (!inputText.trim()) {
+      setIsValid(false);
+      setValidationError('Please enter some text or URL to generate a QR code');
+      return;
+    }
+
+    if (isOverLimit) {
+      setIsValid(false);
+      setValidationError(`Content is too long (${characterCount}/${maxCharacters} characters)`);
+      return;
+    }
+
+    // Validate content based on type
+    const validation = validateQRContent(inputText, detectContentType(inputText));
+    if (!validation.isValid) {
+      setIsValid(false);
+      setValidationError(validation.error || 'Invalid content');
+      return;
+    }
+
+    setIsValid(true);
+    setValidationError('');
+  }, [inputText, isOverLimit, characterCount, maxCharacters]);
+
+  const handleGenerate = () => {
+    if (!isValid) {
+      toast({
+        title: "Validation Error",
+        description: validationError,
+        variant: "destructive"
       });
-    }
-  };
-
-  const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhoneNumber = (phone: string): boolean => {
-    const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-    const cleanPhone = phone.replace(/[\s\-\(\)]/g, '');
-    return phoneRegex.test(cleanPhone);
-  };
-
-  const hasValidationErrors = (): boolean => {
-    return Object.keys(validationErrors).length > 0;
-  };
-
-  const handleURLChange = (value: string) => {
-    clearValidationError('url');
-    
-    if (value) {
-      const validation = validateURL(value);
-      if (!validation.isValid && validation.error) {
-        setValidationErrors(prev => ({ ...prev, url: validation.error! }));
-      }
-    }
-    
-    onInputChange(value);
-  };
-
-  const handleWiFiChange = (field: keyof typeof wifiData, value: any) => {
-    clearValidationError(`wifi_${field}`);
-    const newWifiData = { ...wifiData, [field]: value };
-    setWifiData(newWifiData);
-
-    // Validate SSID
-    if (field === 'ssid') {
-      const validation = validateWiFiSSID(value);
-      if (!validation.isValid && validation.error) {
-        setValidationErrors(prev => ({ ...prev, wifi_ssid: validation.error! }));
-        return;
-      }
+      return;
     }
 
-    // Validate password
-    if (field === 'password') {
-      const validation = validateWiFiPassword(value, newWifiData.security);
-      if (!validation.isValid && validation.error) {
-        setValidationErrors(prev => ({ ...prev, wifi_password: validation.error! }));
-        return;
-      }
+    if (!inputText.trim()) {
+      toast({
+        title: "Input Required",
+        description: "Please enter some text or URL to generate a QR code",
+        variant: "destructive"
+      });
+      return;
     }
 
-    // Generate WiFi QR content
-    const wifiString = `WIFI:T:${newWifiData.security};S:${newWifiData.ssid};P:${newWifiData.password};H:${newWifiData.hidden ? 'true' : 'false'};;`;
-    onInputChange(wifiString);
+    onGenerate();
   };
 
-  const handleContactChange = (field: keyof typeof contactData, value: string) => {
-    clearValidationError(`contact_${field}`);
-    const newContactData = { ...contactData, [field]: value };
-    setContactData(newContactData);
+  // Optimization logic
+  const [optimizedText, setOptimizedText] = useState(inputText);
+  const [showOptimization, setShowOptimization] = useState(false);
 
-    // Validate email
-    if (field === 'email' && value) {
-      if (!validateEmail(value)) {
-        setValidationErrors(prev => ({ ...prev, contact_email: 'Please enter a valid email address' }));
-        return;
-      }
-    }
-
-    // Validate phone
-    if (field === 'phone' && value) {
-      if (!validatePhoneNumber(value)) {
-        setValidationErrors(prev => ({ ...prev, contact_phone: 'Please enter a valid phone number' }));
-        return;
-      }
-    }
-
-    // Validate URL
-    if (field === 'url' && value) {
-      const validation = validateURL(value);
-      if (!validation.isValid && validation.error) {
-        setValidationErrors(prev => ({ ...prev, contact_url: validation.error }));
-        return;
-      }
-    }
-
-    // Generate vCard content
-    const vcard = `BEGIN:VCARD
-VERSION:3.0
-FN:${newContactData.name}
-ORG:${newContactData.organization}
-TEL:${newContactData.phone}
-EMAIL:${newContactData.email}
-URL:${newContactData.url}
-END:VCARD`;
-    onInputChange(vcard);
+  const handleOptimize = () => {
+    const { optimized, saved } = optimizeText(inputText);
+    setOptimizedText(optimized);
+    onInputChange(optimized);
+    setShowOptimization(true);
+    toast({
+      title: "Content Optimized",
+      description: `Saved ${saved} characters!`,
+    });
   };
 
-  const handleTextChange = (value: string) => {
-    clearValidationError('text');
-    onInputChange(value);
+  const handleUndo = () => {
+    onInputChange(inputText);
+    setShowOptimization(false);
+    toast({
+      title: "Optimization Undone",
+      description: "Reverted to original content.",
+    });
   };
-
-  const handleEmailChange = (value: string) => {
-    clearValidationError('email');
-    
-    if (value) {
-      if (!validateEmail(value)) {
-        setValidationErrors(prev => ({ ...prev, email: 'Please enter a valid email address' }));
-      }
-    }
-    
-    onInputChange(`mailto:${value}`);
-  };
-
-  const handlePhoneChange = (value: string) => {
-    clearValidationError('phone');
-    
-    if (value) {
-      if (!validatePhoneNumber(value)) {
-        setValidationErrors(prev => ({ ...prev, phone: 'Please enter a valid phone number (e.g., +1234567890)' }));
-      }
-    }
-    
-    onInputChange(`tel:${value}`);
-  };
-
-  const handleDismissOptimization = () => {
-    setOptimizationDismissed(true);
-  };
-
-  const handleGenerateClick = async () => {
-    if (hasValidationErrors()) {
-      return; // Block generation if there are validation errors
-    }
-    await onGenerate();
-  };
-
-  const canGenerate = !isGenerating && !isOverLimit && inputText.trim() && !hasValidationErrors();
-
-  const tabs = [
-    { id: 'url', label: 'URL', icon: Globe },
-    { id: 'text', label: 'Text', icon: MessageSquare },
-    { id: 'wifi', label: 'WiFi', icon: Wifi },
-    { id: 'contact', label: 'Contact', icon: User },
-    { id: 'phone', label: 'Phone', icon: Phone },
-    { id: 'email', label: 'Email', icon: Mail },
-  ];
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5" />
-          Enter Your Content
-          {optimizationShown && !optimizationDismissed && (
-            <div className="flex items-center gap-2 ml-auto">
-              <div className="flex items-center gap-2 bg-green-50 border border-green-200 rounded-lg px-3 py-1">
-                <span className="text-sm text-green-700 font-medium">
-                  Optimized! Saved {savedChars} chars
-                </span>
-                <Button
-                  onClick={onUndoOptimization}
-                  variant="ghost"
-                  size="sm"
-                  className="text-green-600 hover:text-green-700 h-6 w-6 p-0"
-                  title="Undo optimization"
-                >
-                  <Undo2 size={14} />
-                </Button>
-                <Button
-                  onClick={handleDismissOptimization}
-                  variant="ghost"
-                  size="sm"
-                  className="text-green-600 hover:text-green-700 h-6 w-6 p-0"
-                  title="Dismiss"
-                >
-                  <X size={14} />
-                </Button>
-              </div>
-            </div>
-          )}
-        </CardTitle>
-        <CardDescription>
-          Choose what you want to encode in your QR code
-          <div className="flex items-center justify-between mt-2">
-            <span className={`text-sm ${isOverLimit ? 'text-red-500' : 'text-gray-500'}`}>
-              {characterCount}/{maxCharacters} characters
+    <div className="space-y-4">
+      {/* Input Field */}
+      <div className="space-y-2">
+        <label htmlFor="qr-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Enter your text or URL
+        </label>
+        <div className="relative">
+          <textarea
+            id="qr-input"
+            value={inputText}
+            onChange={(e) => onInputChange(e.target.value)}
+            placeholder="Enter your text, URL, email, or any content..."
+            className={`w-full h-32 p-4 border rounded-xl resize-none focus:outline-none focus:ring-2 transition-colors text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 ${
+              !isValid && inputText.trim()
+                ? 'border-red-300 focus:ring-red-500/20 focus:border-red-500'
+                : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500/20 focus:border-blue-500'
+            }`}
+          />
+          
+          {/* Character Counter */}
+          <div className="absolute bottom-3 right-3 text-xs text-gray-500 dark:text-gray-400">
+            <span className={characterCount > maxCharacters ? 'text-red-500' : ''}>
+              {characterCount}/{maxCharacters}
             </span>
           </div>
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-6">
-            {tabs.map((tab) => {
-              const Icon = tab.icon;
-              return (
-                <TabsTrigger key={tab.id} value={tab.id} className="flex items-center gap-1">
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-
-          <TabsContent value="url" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="url">Website URL</Label>
-              <Input
-                id="url"
-                type="url"
-                placeholder="https://example.com"
-                value={activeTab === 'url' ? inputText : ''}
-                onChange={(e) => handleURLChange(e.target.value)}
-                disabled={isGenerating}
-                className={validationErrors.url ? 'border-red-500' : ''}
-              />
-              {validationErrors.url && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{validationErrors.url}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="text" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="text">Text Content</Label>
-              <Textarea
-                id="text"
-                placeholder="Enter any text you want to encode..."
-                value={activeTab === 'text' ? inputText : ''}
-                onChange={(e) => handleTextChange(e.target.value)}
-                disabled={isGenerating}
-                rows={6}
-                className="resize-none"
-              />
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="wifi" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="ssid">Network Name (SSID)</Label>
-                <Input
-                  id="ssid"
-                  placeholder="My WiFi Network"
-                  value={wifiData.ssid}
-                  onChange={(e) => handleWiFiChange('ssid', e.target.value)}
-                  disabled={isGenerating}
-                  maxLength={32}
-                  className={validationErrors.wifi_ssid ? 'border-red-500' : ''}
-                />
-                {validationErrors.wifi_ssid && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{validationErrors.wifi_ssid}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="wifi-security">Security Type</Label>
-                <Select value={wifiData.security} onValueChange={(value) => handleWiFiChange('security', value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="WPA">WPA/WPA2</SelectItem>
-                    <SelectItem value="WEP">WEP</SelectItem>
-                    <SelectItem value="nopass">Open (No Password)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {wifiData.security !== 'nopass' && (
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="wifi-password">Password</Label>
-                  <Input
-                    id="wifi-password"
-                    type="password"
-                    placeholder="WiFi password"
-                    value={wifiData.password}
-                    onChange={(e) => handleWiFiChange('password', e.target.value)}
-                    disabled={isGenerating}
-                    maxLength={63}
-                    className={validationErrors.wifi_password ? 'border-red-500' : ''}
-                  />
-                  {validationErrors.wifi_password && (
-                    <Alert variant="destructive">
-                      <AlertTriangle className="h-4 w-4" />
-                      <AlertDescription>{validationErrors.wifi_password}</AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="contact" className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="contact-name">Full Name</Label>
-                <Input
-                  id="contact-name"
-                  placeholder="John Doe"
-                  value={contactData.name}
-                  onChange={(e) => handleContactChange('name', e.target.value)}
-                  disabled={isGenerating}
-                  maxLength={100}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-org">Organization</Label>
-                <Input
-                  id="contact-org"
-                  placeholder="Company Name"
-                  value={contactData.organization}
-                  onChange={(e) => handleContactChange('organization', e.target.value)}
-                  disabled={isGenerating}
-                  maxLength={100}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-phone">Phone</Label>
-                <Input
-                  id="contact-phone"
-                  placeholder="+1234567890"
-                  value={contactData.phone}
-                  onChange={(e) => handleContactChange('phone', e.target.value)}
-                  disabled={isGenerating}
-                  maxLength={20}
-                  className={validationErrors.contact_phone ? 'border-red-500' : ''}
-                />
-                {validationErrors.contact_phone && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{validationErrors.contact_phone}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="contact-email">Email</Label>
-                <Input
-                  id="contact-email"
-                  type="email"
-                  placeholder="john@example.com"
-                  value={contactData.email}
-                  onChange={(e) => handleContactChange('email', e.target.value)}
-                  disabled={isGenerating}
-                  maxLength={100}
-                  className={validationErrors.contact_email ? 'border-red-500' : ''}
-                />
-                {validationErrors.contact_email && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{validationErrors.contact_email}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="contact-url">Website</Label>
-                <Input
-                  id="contact-url"
-                  type="url"
-                  placeholder="https://example.com"
-                  value={contactData.url}
-                  onChange={(e) => handleContactChange('url', e.target.value)}
-                  disabled={isGenerating}
-                  maxLength={200}
-                  className={validationErrors.contact_url ? 'border-red-500' : ''}
-                />
-                {validationErrors.contact_url && (
-                  <Alert variant="destructive">
-                    <AlertTriangle className="h-4 w-4" />
-                    <AlertDescription>{validationErrors.contact_url}</AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="phone" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                placeholder="+1234567890"
-                value={activeTab === 'phone' ? inputText.replace('tel:', '') : ''}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                disabled={isGenerating}
-                maxLength={20}
-                className={validationErrors.phone ? 'border-red-500' : ''}
-              />
-              {validationErrors.phone && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{validationErrors.phone}</AlertDescription>
-                </Alert>
-              )}
-              <p className="text-sm text-gray-500">
-                Include country code for international numbers
-              </p>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="email" className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="someone@example.com"
-                value={activeTab === 'email' ? inputText.replace('mailto:', '') : ''}
-                onChange={(e) => handleEmailChange(e.target.value)}
-                disabled={isGenerating}
-                maxLength={100}
-                className={validationErrors.email ? 'border-red-500' : ''}
-              />
-              {validationErrors.email && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>{validationErrors.email}</AlertDescription>
-                </Alert>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
-
-        <div className="mt-6 flex justify-center">
-          <Button
-            onClick={handleGenerateClick}
-            disabled={!canGenerate}
-            className="w-full md:w-auto px-8 py-3 text-lg font-semibold"
-            size="lg"
-          >
-            {isGenerating ? 'Generating QR Code...' : 'Generate QR Code'}
-          </Button>
         </div>
 
-        {hasValidationErrors() && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-700 font-medium">
-              Please fix the validation errors above before generating your QR code.
-            </p>
+        {/* Show validation error only when there's actual invalid content */}
+        {!isValid && inputText.trim() && (
+          <div className="flex items-center space-x-2 text-red-600 dark:text-red-400 text-sm">
+            <AlertCircle size={16} />
+            <span>{validationError}</span>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* Optimization Banner */}
+      {optimizationShown && savedChars > 0 && (
+        <div className="p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-xl">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5" />
+              <div>
+                <h4 className="font-medium text-green-800 dark:text-green-200 text-sm">
+                  Content Optimized!
+                </h4>
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+                  Saved {savedChars} characters by removing extra spaces and optimizing formatting.
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={onUndoOptimization}
+              variant="ghost"
+              size="sm"
+              className="text-green-700 hover:text-green-800 dark:text-green-300 dark:hover:text-green-200"
+            >
+              <Undo2 size={14} className="mr-1" />
+              Undo
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Generate Button */}
+      <Button
+        onClick={handleGenerate}
+        disabled={isGenerating || (!inputText.trim())}
+        className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-400 disabled:to-gray-500 text-white font-semibold h-12 text-lg rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
+      >
+        {isGenerating ? (
+          <>
+            <Loader2 className="w-5 h-5 mr-3 animate-spin" />
+            Generating QR Code...
+          </>
+        ) : (
+          <>
+            <QrCode className="w-5 h-5 mr-3" />
+            Generate QR Code
+          </>
+        )}
+      </Button>
+    </div>
   );
 }
