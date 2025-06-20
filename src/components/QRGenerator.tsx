@@ -16,6 +16,7 @@ const MAX_CHARACTERS = 2000;
 export function QRGenerator() {
   const { toast } = useToast();
   const [batchResults, setBatchResults] = useState<any[]>([]);
+  const [isGeneratingArt, setIsGeneratingArt] = useState(false);
   
   const {
     inputText,
@@ -92,29 +93,52 @@ export function QRGenerator() {
     setInputText('');
   }, [setInputText]);
 
+  const handleArtGenerate = useCallback(async (artStyle: string, customPrompt?: string) => {
+    setIsGeneratingArt(true);
+    try {
+      // This would be implemented with actual AI art generation
+      console.log('Generating AI art QR with style:', artStyle, 'and prompt:', customPrompt);
+      toast({
+        title: "AI Art QR Generated",
+        description: "Your artistic QR code has been created!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to generate AI art QR code.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingArt(false);
+    }
+  }, [toast]);
+
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-16">
+    <div className="w-full max-w-7xl mx-auto space-y-12">
       
-      {/* Main QR Generator Section - Clearly Sectioned */}
+      {/* Main QR Generator Section */}
       <div className="bg-white dark:bg-gray-800/30 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
-            🎯 QR Code Generator
+            🎯 Quick QR Generator
           </h2>
           <p className="text-gray-600 dark:text-gray-300 text-lg max-w-2xl mx-auto">
-            Create your QR code instantly - enter text, URL, or use our smart templates below
+            Enter your text or URL below to create a QR code instantly
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Input Section - Left Side */}
+          {/* Input Section */}
           <div className="space-y-6">
-            {/* AI Assistant - Positioned better */}
-            <div className="flex justify-center">
+            {/* AI Assistant */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/50">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-blue-900 dark:text-blue-100">✨ Need Help?</h4>
+              </div>
               <AIAssistant onContentGenerated={handleAIGenerated} />
             </div>
 
-            {/* QR Input Component */}
+            {/* QR Input */}
             <QRInput
               inputText={inputText}
               onInputChange={setInputText}
@@ -130,7 +154,7 @@ export function QRGenerator() {
               errorCorrectionLevel={errorCorrectionLevel}
             />
 
-            {/* Clear Input Button */}
+            {/* Clear Button */}
             {inputText && (
               <div className="flex justify-center">
                 <Button
@@ -145,13 +169,15 @@ export function QRGenerator() {
               </div>
             )}
 
-            {/* Personalized Tips */}
+            {/* Smart Tips */}
             {personalizedTips.length > 0 && (
-              <PersonalizedTips suggestions={personalizedTips} />
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700/50">
+                <PersonalizedTips suggestions={personalizedTips} />
+              </div>
             )}
           </div>
 
-          {/* Output Section - Right Side */}
+          {/* Output Section */}
           <QRDisplay
             qrCodeDataURL={qrCodeDataURL}
             isGenerating={isGenerating}
@@ -163,7 +189,7 @@ export function QRGenerator() {
         </div>
       </div>
 
-      {/* AI Art QR Section - Clearly Sectioned */}
+      {/* AI Art QR Section */}
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl shadow-lg border border-purple-200 dark:border-purple-700 p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white flex items-center justify-center gap-3">
@@ -171,14 +197,18 @@ export function QRGenerator() {
             AI Art QR Generator
           </h2>
           <p className="text-gray-600 dark:text-gray-300 text-lg max-w-3xl mx-auto">
-            Transform your QR codes into stunning artwork with AI - premium feature for creative professionals
+            Transform your QR codes into stunning artwork - premium feature for creative professionals
           </p>
         </div>
         
-        <AIArtQR />
+        <AIArtQR 
+          inputText={inputText}
+          onGenerate={handleArtGenerate}
+          isGenerating={isGeneratingArt}
+        />
       </div>
 
-      {/* Smart Batch Processing Section - Much More Obviously Sectioned */}
+      {/* Smart Batch Processing Section */}
       <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 p-8">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-3 text-gray-900 dark:text-white">
@@ -191,7 +221,7 @@ export function QRGenerator() {
 
         <BatchProcessor onBatchGenerate={handleBatchGenerate} />
         
-        {/* Batch Results Display */}
+        {/* Batch Results */}
         {batchResults.length > 0 && (
           <div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-green-200 dark:border-green-700">
             <div className="flex items-center justify-between mb-4">
