@@ -114,7 +114,7 @@ export function QRGenerator() {
   }, [toast]);
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 md:space-y-12">
+    <div className="w-full max-w-7xl mx-auto space-y-8 md:space-y-12 relative">
       
       {/* Main QR Generator Section */}
       <div className="bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 md:p-10">
@@ -183,26 +183,6 @@ export function QRGenerator() {
             characterCount={characterCount}
             onDownload={handleDownload}
           />
-        </div>
-      </div>
-
-      {/* AI Assistant Section - Moved to prominent location */}
-      <div className="bg-gradient-to-br from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200/50 dark:border-blue-700/30 p-6 md:p-10">
-        <div className="text-center mb-8">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
-              <Sparkles className="w-6 h-6 text-white" />
-            </div>
-            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              AI Assistant
-            </h2>
-          </div>
-          <p className="text-gray-700 dark:text-gray-300 text-lg md:text-xl max-w-4xl mx-auto leading-relaxed mb-8">
-            Meet Alexander, your intelligent QR code assistant. Get instant help with WiFi codes, business cards, websites, and more. Just describe what you need!
-          </p>
-          <div className="flex justify-center">
-            <AIAssistant onContentGenerated={handleAIGenerated} />
-          </div>
         </div>
       </div>
 
@@ -322,6 +302,11 @@ export function QRGenerator() {
             />
           </div>
         )}
+      </div>
+
+      {/* Floating AI Assistant Button - Strategic Position */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <AIAssistant onContentGenerated={handleAIGenerated} />
       </div>
     </div>
   );
