@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { MessageCircle, Send, X, Bot, User, Loader2, CheckCircle, AlertCircle, Download, Sparkles, Zap } from 'lucide-react';
+import { MessageCircle, Send, X, Bot, User, Loader2, CheckCircle, AlertCircle, Download, Sparkles, ArrowRight, Wifi, Globe, User as UserIcon, Phone, Mail, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import QRCode from 'qrcode';
@@ -10,10 +10,12 @@ interface Message {
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
-  type?: 'text' | 'suggestion' | 'error' | 'success';
+  type?: 'text' | 'info' | 'success' | 'error' | 'collection';
   metadata?: {
-    contentGenerated?: string;
-    suggestions?: string[];
+    step?: string;
+    collectedData?: Record<string, any>;
+    nextAction?: string;
+    qrData?: string;
     qrCodeDataURL?: string;
   };
 }
@@ -22,28 +24,36 @@ interface AIAssistantProps {
   onContentGenerated: (content: string) => void;
 }
 
+const QR_TYPES = {
+  wifi: { icon: Wifi, label: 'WiFi Network', fields: ['ssid', 'password', 'security'] },
+  url: { icon: Globe, label: 'Website/URL', fields: ['url'] },
+  contact: { icon: UserIcon, label: 'Contact Card', fields: ['name', 'phone', 'email', 'organization'] },
+  phone: { icon: Phone, label: 'Phone Number', fields: ['phone'] },
+  email: { icon: Mail, label: 'Email', fields: ['email', 'subject', 'body'] },
+  text: { icon: MessageSquare, label: 'Custom Text', fields: ['text'] }
+};
+
 export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
       role: 'assistant',
-      content: "👋 Hi! I'm Alexander, your intelligent QR code assistant.\n\nI can help you create:\n🔗 **Website & URL QR codes**\n📶 **WiFi connection codes** \n📇 **Digital business cards**\n📧 **Email & contact info**\n📱 **Social media profiles**\n💬 **Custom text messages**\n\nJust tell me what you'd like to create, and I'll handle the rest!",
+      content: "👋 Hi! I'm Alexander, your QR code assistant.\n\nI'll help you create the perfect QR code by gathering all the details I need first. What type of QR code would you like to create?",
       timestamp: new Date(),
-      type: 'text' as const,
+      type: 'text',
       metadata: {
-        suggestions: [
-          "Create WiFi QR for my network",
-          "Make a business card QR code", 
-          "Generate website QR code",
-          "Create contact info QR"
-        ]
+        step: 'select_type'
       }
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [conversationContext, setConversationContext] = useState<any>({});
+  const [currentCollection, setCurrentCollection] = useState<{
+    type: string;
+    data: Record<string, any>;
+    currentField: number;
+  } | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
@@ -74,178 +84,287 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
     }
   };
 
-  const validateAndOptimizeContent = (content: string) => {
-    const optimized = content.trim();
-    
-    // URL optimization
-    if (optimized.startsWith('http://')) {
-      return optimized.replace('http://', 'https://');
+  const formatQRContent = (type: string, data: Record<string, any>): string => {
+    switch (type) {
+      case 'wifi':
+        return `WIFI:T:${data.security || 'WPA'};S:${data.ssid};P:${data.password};;`;
+      case 'contact':
+        let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
+        if (data.name) vcard += `FN:${data.name}\n`;
+        if (data.phone) vcard += `TEL:${data.phone}\n`;
+        if (data.email) vcard += `EMAIL:${data.email}\n`;
+        if (data.organization) vcard += `ORG:${data.organization}\n`;
+        vcard += 'END:VCARD';
+        return vcard;
+      case 'email':
+        let emailStr = `mailto:${data.email}`;
+        const params = [];
+        if (data.subject) params.push(`subject=${encodeURIComponent(data.subject)}`);
+        if (data.body) params.push(`body=${encodeURIComponent(data.body)}`);
+        if (params.length > 0) emailStr += `?${params.join('&')}`;
+        return emailStr;
+      case 'phone':
+        return `tel:${data.phone}`;
+      case 'url':
+        let url = data.url;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) {
+          url = 'https://' + url;
+        }
+        return url;
+      case 'text':
+        return data.text;
+      default:
+        return '';
     }
-    
-    // Clean up extra spaces
-    return optimized.replace(/\s+/g, ' ');
   };
 
-  const extractWiFiDetails = (input: string) => {
-    const text = input.toLowerCase();
-    
-    // Enhanced pattern matching for WiFi details
-    const patterns = [
-      // "network name password"
-      /(?:network|wifi|ssid)?\s*(?:is|name)?\s*["']?([^\s"']+)["']?\s+(?:password|pass|pwd)?\s*(?:is)?\s*["']?([^\s"']+)["']?/i,
-      // "name: X password: Y" format
-      /(?:name|ssid)[:\s]+["']?([^"'\n,]+)["']?[,\s]*(?:password|pass)[:\s]+["']?([^"'\n]+)["']?/i,
-      // Simple format
-      /^([a-zA-Z0-9_-]+)\s+([a-zA-Z0-9@#$%^&*!_-]+)$/
-    ];
-    
-    for (const pattern of patterns) {
-      const match = input.match(pattern);
-      if (match && match[1] && match[2]) {
-        return { 
-          ssid: match[1].trim(), 
-          password: match[2].trim() 
-        };
+  const getFieldPrompt = (type: string, field: string): string => {
+    const prompts: Record<string, Record<string, string>> = {
+      wifi: {
+        ssid: "What's your WiFi network name (SSID)?",
+        password: "What's the WiFi password?",
+        security: "What's the security type? (WPA/WPA2/WEP/Open - or just press Enter for WPA)"
+      },
+      contact: {
+        name: "What's the full name for this contact?",
+        phone: "What's the phone number? (with country code if international)",
+        email: "What's the email address?",
+        organization: "What's the company/organization? (optional - press Enter to skip)"
+      },
+      email: {
+        email: "What's the recipient's email address?",
+        subject: "What's the email subject? (optional - press Enter to skip)",
+        body: "What's the email message? (optional - press Enter to skip)"
+      },
+      phone: {
+        phone: "What's the phone number? (include country code for international numbers)"
+      },
+      url: {
+        url: "What's the website URL? (e.g., mywebsite.com or https://example.com)"
+      },
+      text: {
+        text: "What text would you like in the QR code?"
       }
-    }
-    
-    return null;
+    };
+    return prompts[type]?.[field] || `Please provide ${field}:`;
   };
 
-  const extractContactDetails = (input: string) => {
-    const emailPattern = /[\w\.-]+@[\w\.-]+\.\w+/;
-    const phonePattern = /[\+]?[\s\-\(\)]?[\d\s\-\(\)]{10,}/;
+  const startCollection = (type: string) => {
+    const typeConfig = QR_TYPES[type as keyof typeof QR_TYPES];
+    if (!typeConfig) return;
+
+    setCurrentCollection({
+      type,
+      data: {},
+      currentField: 0
+    });
+
+    const firstField = typeConfig.fields[0];
+    const prompt = getFieldPrompt(type, firstField);
     
-    const email = input.match(emailPattern)?.[0];
-    const phone = input.match(phonePattern)?.[0]?.replace(/[\s\-\(\)]/g, '');
-    
-    // Extract name (capitalized words)
-    let name = '';
-    const words = input.split(/\s+/);
-    for (const word of words) {
-      if (word.match(/^[A-Z][a-z]+$/) && !word.match(emailPattern) && !word.match(/\d/)) {
-        name += (name ? ' ' : '') + word;
+    const aiMessage: Message = {
+      id: Date.now().toString(),
+      role: 'assistant',
+      content: `Great! Let's create a ${typeConfig.label} QR code.\n\n${prompt}`,
+      timestamp: new Date(),
+      type: 'collection',
+      metadata: {
+        step: 'collecting',
+        collectedData: {},
+        nextAction: `collecting_${firstField}`
       }
-    }
-    
-    if (name || email || phone) {
-      return { name, email, phone };
-    }
-    
-    return null;
+    };
+
+    setMessages(prev => [...prev, aiMessage]);
   };
 
-  const detectContentType = (input: string) => {
-    const text = input.toLowerCase();
+  const processCollectionInput = async (input: string) => {
+    if (!currentCollection) return;
+
+    const typeConfig = QR_TYPES[currentCollection.type as keyof typeof QR_TYPES];
+    const currentFieldName = typeConfig.fields[currentCollection.currentField];
     
-    // Enhanced content type detection
-    if (text.includes('wifi') || text.includes('network') || text.includes('password') || text.includes('ssid')) return 'wifi';
-    if (text.match(/https?:\/\//) || text.includes('www.') || text.match(/\w+\.(com|org|net|edu|gov)/)) return 'url';
-    if (text.includes('contact') || text.includes('business') || text.includes('phone') || text.includes('@') || text.includes('vcard')) return 'contact';
-    if (text.includes('event') || text.includes('wedding') || text.includes('party') || text.includes('meeting')) return 'event';
-    if (text.includes('email') && text.includes('@')) return 'email';
-    if (text.includes('instagram') || text.includes('facebook') || text.includes('linkedin') || text.includes('twitter')) return 'social';
+    // Handle optional fields
+    const isOptional = ['organization', 'subject', 'body'].includes(currentFieldName);
+    const value = input.trim();
     
-    return 'general';
-  };
-
-  const generateContextualResponse = async (userInput: string, contentType: string) => {
-    try {
-      switch (contentType) {
-        case 'wifi':
-          const wifiDetails = extractWiFiDetails(userInput);
-          if (wifiDetails) {
-            const content = `WIFI:T:WPA;S:${wifiDetails.ssid};P:${wifiDetails.password};;`;
-            const qrCodeDataURL = await generateQRCodeImage(content);
-            
-            return {
-              content: `🎉 Perfect! I've created a WiFi QR code for **"${wifiDetails.ssid}"**\n\nWhen someone scans this code:\n✅ Automatic connection to your network\n✅ No manual password entry needed\n✅ Works on iOS and Android\n\n💡 **Pro tip:** Print this and place it where guests can easily see it!`,
-              type: 'success' as const,
-              generatedContent: content,
-              qrCodeDataURL
-            };
-          }
-          
-          return {
-            content: "I'll help you create a WiFi QR code! 📶\n\nPlease provide your network details in one of these formats:\n\n**Option 1:** `NetworkName MyPassword123`\n**Option 2:** `Network: CafeWiFi Password: coffee2024`\n**Option 3:** Just tell me naturally like *\"My network is HomeWiFi with password abc123\"*",
-            type: 'text' as const,
-            suggestions: ["HomeWiFi mypassword123", "Network: CafeWiFi Password: welcome123"]
-          };
-
-        case 'url':
-          const urlMatch = userInput.match(/(https?:\/\/[^\s]+|www\.[^\s]+|[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*)/);
-          if (urlMatch) {
-            let url = urlMatch[0];
-            if (!url.startsWith('http')) {
-              url = 'https://' + url.replace(/^www\./, '');
-            }
-            const optimizedUrl = validateAndOptimizeContent(url);
-            const qrCodeDataURL = await generateQRCodeImage(optimizedUrl);
-            
-            return {
-              content: `🌐 Excellent! Your website QR code is ready!\n\n**URL:** ${optimizedUrl}\n\n✅ **Quick access** - One scan takes users directly to your site\n✅ **Mobile optimized** - Perfect for print and digital use\n✅ **Professional** - Great for business cards and marketing\n\n💡 **Tip:** Test the link on mobile first to ensure fast loading!`,
-              type: 'success' as const,
-              generatedContent: optimizedUrl,
-              qrCodeDataURL
-            };
-          }
-          return {
-            content: "I'll create a website QR code for you! 🌐\n\nJust share the URL:\n• `mywebsite.com`\n• `https://example.com`\n• `www.mysite.org`\n\nI'll automatically optimize it for the best QR code format!",
-            type: 'text' as const,
-            suggestions: ["https://mywebsite.com", "mycompany.com"]
-          };
-
-        case 'contact':
-          const contactDetails = extractContactDetails(userInput);
-          if (contactDetails && (contactDetails.name || contactDetails.email || contactDetails.phone)) {
-            let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
-            if (contactDetails.name) vcard += `FN:${contactDetails.name}\n`;
-            if (contactDetails.phone) vcard += `TEL:${contactDetails.phone}\n`;
-            if (contactDetails.email) vcard += `EMAIL:${contactDetails.email}\n`;
-            vcard += 'END:VCARD';
-            
-            const qrCodeDataURL = await generateQRCodeImage(vcard);
-            
-            return {
-              content: `📇 Your professional contact QR code is ready!\n\n**Contact Information:**\n${contactDetails.name ? `👤 **Name:** ${contactDetails.name}\n` : ''}${contactDetails.phone ? `📞 **Phone:** ${contactDetails.phone}\n` : ''}${contactDetails.email ? `📧 **Email:** ${contactDetails.email}\n` : ''}\n✅ **Auto-save** - Scanning adds contact directly to phone\n✅ **Professional** - Perfect for networking and business cards\n✅ **Universal** - Works on all smartphones\n\n💡 **Perfect for:** Business cards, email signatures, networking events!`,
-              type: 'success' as const,
-              generatedContent: vcard,
-              qrCodeDataURL
-            };
-          }
-          
-          return {
-            content: "I'll create a professional contact QR code! 📇\n\nShare your contact information:\n• **Name, phone, email together:** `John Doe 555-123-4567 john@company.com`\n• **Or naturally:** `My name is Sarah Smith, phone 555-999-8888, email sarah@email.com`\n\nI'll format it perfectly for easy contact saving!",
-            type: 'text' as const,
-            suggestions: ["John Smith 555-123-4567 john@company.com", "Add my business contact info"]
-          };
-
-        default:
-          // Direct content QR code
-          if (userInput.trim().length > 0) {
-            const content = validateAndOptimizeContent(userInput);
-            const qrCodeDataURL = await generateQRCodeImage(content);
-            
-            return {
-              content: `✨ Your custom QR code is ready!\n\n**Content:** ${content}\n\n✅ **Instant access** - Scanning shows your exact message\n✅ **Versatile** - Perfect for any text, messages, or data\n✅ **Reliable** - High-quality QR code generation\n\n💡 **Great for:** Custom messages, instructions, codes, or any text content!`,
-              type: 'success' as const,
-              generatedContent: content,
-              qrCodeDataURL
-            };
-          }
-          
-          return {
-            content: "I'm here to help you create the perfect QR code! ✨\n\n**Popular options:**\n📶 **WiFi codes** - `\"Create WiFi QR for MyNetwork password123\"`\n🌐 **Website links** - `\"Make QR for mywebsite.com\"`\n📇 **Contact cards** - `\"Business card for John Doe 555-123-4567 john@email.com\"`\n📱 **Social profiles** - `\"QR code for my Instagram @username\"`\n💬 **Custom text** - Any message or text you want\n\n**What would you like to create?**",
-            type: 'text' as const,
-            suggestions: ["Create WiFi QR code", "Make website QR", "Generate contact card", "Custom message QR"]
-          };
-      }
-    } catch (error) {
-      return {
-        content: "I encountered an issue generating your QR code. Let me try a different approach - could you rephrase your request or provide the information in a simpler format?",
-        type: 'error' as const
+    if (!isOptional && !value) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `This field is required. ${getFieldPrompt(currentCollection.type, currentFieldName)}`,
+        timestamp: new Date(),
+        type: 'error'
       };
+      setMessages(prev => [...prev, errorMessage]);
+      return;
     }
+
+    // Update collected data
+    const updatedData = { ...currentCollection.data };
+    if (value || !isOptional) {
+      updatedData[currentFieldName] = value || (currentFieldName === 'security' ? 'WPA' : '');
+    }
+
+    const nextFieldIndex = currentCollection.currentField + 1;
+    
+    if (nextFieldIndex < typeConfig.fields.length) {
+      // More fields to collect
+      const nextField = typeConfig.fields[nextFieldIndex];
+      const prompt = getFieldPrompt(currentCollection.type, nextField);
+      
+      setCurrentCollection({
+        ...currentCollection,
+        data: updatedData,
+        currentField: nextFieldIndex
+      });
+
+      const continueMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: `✅ Got it!\n\n${prompt}`,
+        timestamp: new Date(),
+        type: 'collection'
+      };
+      
+      setMessages(prev => [...prev, continueMessage]);
+    } else {
+      // All data collected, generate QR code
+      setCurrentCollection(null);
+      await generateFinalQR(currentCollection.type, updatedData);
+    }
+  };
+
+  const generateFinalQR = async (type: string, data: Record<string, any>) => {
+    try {
+      const qrContent = formatQRContent(type, data);
+      const qrCodeDataURL = await generateQRCodeImage(qrContent);
+      
+      const typeConfig = QR_TYPES[type as keyof typeof QR_TYPES];
+      
+      // Create summary of collected data
+      let summary = `**${typeConfig.label} QR Code Created!**\n\n`;
+      Object.entries(data).forEach(([key, value]) => {
+        if (value) {
+          const label = key.charAt(0).toUpperCase() + key.slice(1);
+          summary += `• **${label}:** ${key === 'password' ? '••••••••' : value}\n`;
+        }
+      });
+      
+      summary += '\n✨ Your QR code is ready to download and use!';
+
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: summary,
+        timestamp: new Date(),
+        type: 'success',
+        metadata: {
+          qrData: qrContent,
+          qrCodeDataURL
+        }
+      };
+
+      setMessages(prev => [...prev, successMessage]);
+      
+      // Auto-fill the main generator
+      onContentGenerated(qrContent);
+      
+      toast({
+        title: "QR Code Generated! ✨",
+        description: "Alexander has created your QR code and added it to the main generator!",
+      });
+      
+    } catch (error) {
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        role: 'assistant',
+        content: "I encountered an error generating your QR code. Let's try again or choose a different type.",
+        timestamp: new Date(),
+        type: 'error'
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!inputValue.trim()) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputValue,
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = inputValue;
+    setInputValue('');
+    setIsTyping(true);
+
+    // Simulate thinking time
+    setTimeout(async () => {
+      try {
+        if (currentCollection) {
+          // We're collecting data for a QR type
+          await processCollectionInput(currentInput);
+        } else {
+          // Check if user selected a QR type or wants to start over
+          const input = currentInput.toLowerCase();
+          let selectedType = '';
+          
+          for (const [key, config] of Object.entries(QR_TYPES)) {
+            if (input.includes(key) || input.includes(config.label.toLowerCase())) {
+              selectedType = key;
+              break;
+            }
+          }
+          
+          if (selectedType) {
+            startCollection(selectedType);
+          } else {
+            // Show type selection
+            const helpMessage: Message = {
+              id: Date.now().toString(),
+              role: 'assistant',
+              content: "I can help you create these types of QR codes:\n\n🌐 **Website/URL** - Link to any website\n📶 **WiFi Network** - Automatic WiFi connection\n📇 **Contact Card** - Save contact information\n📞 **Phone Number** - Direct phone calls\n📧 **Email** - Pre-filled email composition\n💬 **Custom Text** - Any text message\n\nWhich type would you like to create?",
+              timestamp: new Date(),
+              type: 'info'
+            };
+            setMessages(prev => [...prev, helpMessage]);
+          }
+        }
+      } catch (error) {
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          role: 'assistant',
+          content: "I encountered an issue. Let's start fresh - what type of QR code would you like to create?",
+          timestamp: new Date(),
+          type: 'error'
+        };
+        setMessages(prev => [...prev, errorMessage]);
+        setCurrentCollection(null);
+      } finally {
+        setIsTyping(false);
+      }
+    }, 800);
+  };
+
+  const handleTypeSelect = (type: string) => {
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: QR_TYPES[type as keyof typeof QR_TYPES].label,
+      timestamp: new Date()
+    };
+    
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+    
+    setTimeout(() => {
+      startCollection(type);
+      setIsTyping(false);
+    }, 500);
   };
 
   const handleDownloadQR = (qrDataURL: string) => {
@@ -262,75 +381,6 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
     });
   };
 
-  const handleSend = async () => {
-    if (!inputValue.trim()) return;
-
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      role: 'user',
-      content: inputValue,
-      timestamp: new Date(),
-      type: 'text' as const
-    };
-
-    setMessages(prev => [...prev, userMessage]);
-    const currentInput = inputValue;
-    setInputValue('');
-    setIsTyping(true);
-
-    try {
-      setTimeout(async () => {
-        try {
-          const contentType = detectContentType(currentInput);
-          const response = await generateContextualResponse(currentInput, contentType);
-          
-          const aiMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: response.content,
-            timestamp: new Date(),
-            type: response.type || 'text' as const,
-            metadata: {
-              contentGenerated: response.generatedContent,
-              suggestions: response.suggestions,
-              qrCodeDataURL: response.qrCodeDataURL
-            }
-          };
-
-          setMessages(prev => [...prev, aiMessage]);
-          setIsTyping(false);
-
-          // Auto-fill content if AI generated it
-          if (response.generatedContent) {
-            const optimizedContent = validateAndOptimizeContent(response.generatedContent);
-            onContentGenerated(optimizedContent);
-            
-            toast({
-              title: "QR Content Generated! ✨",
-              description: "Alexander has added your content to the generator above!",
-            });
-          }
-        } catch (error) {
-          setIsTyping(false);
-          const errorMessage: Message = {
-            id: (Date.now() + 1).toString(),
-            role: 'assistant',
-            content: "I apologize, but I'm having trouble processing your request right now. Could you try rephrasing it or break it down into simpler steps?",
-            timestamp: new Date(),
-            type: 'error' as const
-          };
-          setMessages(prev => [...prev, errorMessage]);
-        }
-      }, 1000 + Math.random() * 500);
-    } catch (error) {
-      setIsTyping(false);
-    }
-  };
-
-  const handleSuggestionClick = (suggestion: string) => {
-    setInputValue(suggestion);
-  };
-
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -342,6 +392,8 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
     switch (type) {
       case 'success': return <CheckCircle className="w-4 h-4 text-green-400" />;
       case 'error': return <AlertCircle className="w-4 h-4 text-red-400" />;
+      case 'info': return <Sparkles className="w-4 h-4 text-blue-400" />;
+      case 'collection': return <ArrowRight className="w-4 h-4 text-orange-400" />;
       default: return <Sparkles className="w-4 h-4 text-white" />;
     }
   };
@@ -350,24 +402,23 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
     switch (type) {
       case 'success': return 'border-green-500/30 bg-green-500/5';
       case 'error': return 'border-red-500/30 bg-red-500/5';
+      case 'info': return 'border-blue-500/30 bg-blue-500/5';
+      case 'collection': return 'border-orange-500/30 bg-orange-500/5';
       default: return 'border-gray-700/50';
     }
   };
 
   return (
     <>
-      {/* Toggle Button */}
+      {/* Compact Toggle Button */}
       <Button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-semibold h-14 px-8 rounded-2xl transition-all duration-300 hover:scale-105 shadow-xl hover:shadow-2xl"
+        className="flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 text-white font-medium h-12 px-6 rounded-xl transition-all duration-300 hover:scale-105 shadow-lg hover:shadow-xl"
       >
-        <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
-          <Sparkles className="w-5 h-5" />
+        <div className="w-6 h-6 bg-white/20 rounded-lg flex items-center justify-center">
+          <Sparkles className="w-4 h-4" />
         </div>
-        <div className="text-left">
-          <div className="font-bold">Ask Alexander</div>
-          <div className="text-xs opacity-90">AI QR Assistant</div>
-        </div>
+        <span>Ask Alexander</span>
       </Button>
 
       {/* Chat Panel */}
@@ -382,7 +433,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
                 </div>
                 <div>
                   <h3 className="font-bold text-lg text-gray-900 dark:text-white">Alexander</h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Your intelligent QR assistant</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Smart QR Assistant</p>
                 </div>
               </div>
               <Button
@@ -451,16 +502,17 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
                     </div>
                   </div>
                   
-                  {/* Suggestions */}
-                  {message.metadata?.suggestions && message.role === 'assistant' && (
-                    <div className="ml-14 mt-3 flex flex-wrap gap-2">
-                      {message.metadata.suggestions.map((suggestion, index) => (
+                  {/* Quick Type Selection */}
+                  {message.role === 'assistant' && message.metadata?.step === 'select_type' && (
+                    <div className="ml-14 mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {Object.entries(QR_TYPES).map(([key, config]) => (
                         <button
-                          key={index}
-                          onClick={() => handleSuggestionClick(suggestion)}
-                          className="text-sm px-4 py-2 bg-gradient-to-r from-gray-100/80 to-gray-200/80 dark:from-gray-700/80 dark:to-gray-600/80 hover:from-indigo-100 hover:to-purple-100 dark:hover:from-indigo-900/50 dark:hover:to-purple-900/50 text-gray-700 dark:text-gray-300 rounded-xl transition-all duration-300 hover:scale-105 shadow-sm backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50"
+                          key={key}
+                          onClick={() => handleTypeSelect(key)}
+                          className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50/80 to-gray-100/80 dark:from-gray-700/80 dark:to-gray-600/80 hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-900/50 dark:hover:to-purple-900/50 text-gray-700 dark:text-gray-300 rounded-xl transition-all duration-300 hover:scale-105 shadow-sm backdrop-blur-sm border border-gray-200/50 dark:border-gray-600/50"
                         >
-                          {suggestion}
+                          <config.icon className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+                          <span className="text-sm font-medium">{config.label}</span>
                         </button>
                       ))}
                     </div>
@@ -492,7 +544,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Describe what QR code you need..."
+                  placeholder={currentCollection ? "Type your answer..." : "Choose a QR type or describe what you need..."}
                   className="flex-1 px-5 py-4 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm border border-gray-300/50 dark:border-gray-600/50 rounded-2xl text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-transparent shadow-lg transition-all duration-300"
                   disabled={isTyping}
                 />
@@ -509,7 +561,7 @@ export function AIAssistant({ onContentGenerated }: AIAssistantProps) {
                 </Button>
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-                Alexander can create WiFi, website, contact, and custom QR codes • Press Enter to send
+                Alexander collects all details before generating your QR code • Press Enter to send
               </p>
             </div>
           </div>
