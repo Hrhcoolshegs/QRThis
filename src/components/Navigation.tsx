@@ -136,7 +136,7 @@ export function Navigation() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.label}
-                  </button>
+                  </Link>
                 )
               ))}
               <div className="px-3 py-2">
