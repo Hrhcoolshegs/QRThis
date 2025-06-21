@@ -36,7 +36,7 @@ function QRThisApp() {
         </section>
       </main>
 
-      {/* Enhanced Footer matching features/pricing pages */}
+      {/* Enhanced Footer - Matching features/pricing pages exactly */}
       <footer className="bg-gradient-to-r from-gray-900 via-black to-gray-900 border-t border-gray-800 mt-20">
         <div className="container max-w-7xl mx-auto px-4 py-12">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -64,7 +64,19 @@ function QRThisApp() {
             <div className="space-y-4">
               <h4 className="font-semibold text-white">Quick Links</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#generator" className="hover:text-white transition-colors">QR Generator</a></li>
+                <li>
+                  <button 
+                    onClick={() => {
+                      const generatorSection = document.getElementById('generator');
+                      if (generatorSection) {
+                        generatorSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }
+                    }}
+                    className="hover:text-white transition-colors text-left"
+                  >
+                    QR Generator
+                  </button>
+                </li>
                 <li><a href="/features" className="hover:text-white transition-colors">Features</a></li>
                 <li><a href="/pricing" className="hover:text-white transition-colors">Pricing</a></li>
               </ul>

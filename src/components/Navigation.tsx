@@ -41,9 +41,9 @@ export function Navigation() {
   };
 
   const navLinks = [
+    { href: '#generator', label: 'Try Generator', external: false, onClick: handleGeneratorClick },
     { href: '/features', label: 'Features', external: false },
-    { href: '/pricing', label: 'Pricing', external: false },
-    { href: '#generator', label: 'Try Generator', external: false, onClick: handleGeneratorClick }
+    { href: '/pricing', label: 'Pricing', external: false }
   ];
 
   return (
@@ -68,7 +68,7 @@ export function Navigation() {
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             {navLinks.map((link) => (
-              link.external === false && link.onClick ? (
+              link.onClick ? (
                 <button
                   key={link.href}
                   onClick={link.onClick}
@@ -120,7 +120,7 @@ export function Navigation() {
           <div className="md:hidden mobile-menu-container animate-fade-in">
             <div className="px-2 pt-2 pb-3 space-y-1 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800 shadow-lg">
               {navLinks.map((link) => (
-                link.external === false && link.onClick ? (
+                link.onClick ? (
                   <button
                     key={link.href}
                     onClick={link.onClick}
@@ -136,7 +136,7 @@ export function Navigation() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     {link.label}
-                  </Link>
+                  </button>
                 )
               ))}
               <div className="px-3 py-2">

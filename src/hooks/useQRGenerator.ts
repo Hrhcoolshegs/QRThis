@@ -31,7 +31,7 @@ interface UseQRGeneratorReturn {
 export function useQRGenerator({
   maxCharacters = 2000,
   debounceDelay = 300,
-  optimizationDelay = 5000 // Increased from 2000ms to 5000ms to be less intrusive
+  optimizationDelay = 5000
 }: UseQRGeneratorProps = {}): UseQRGeneratorReturn {
   const [inputText, setInputText] = useState('');
   const [originalText, setOriginalText] = useState('');
@@ -53,20 +53,15 @@ export function useQRGenerator({
   useEffect(() => {
     if (!inputText.trim() || optimizationShown) return;
     
-    const now = Date.now();
-    
-    // Only run optimization if user has stopped typing for the full delay period
     const timeoutId = setTimeout(() => {
-      // Double-check if enough time has passed since last typing
       if (Date.now() - lastTypingTime >= optimizationDelay) {
         const result = optimizeText(inputText);
-        if (result.saved > 5) { // Only show optimization if it saves more than 5 characters
+        if (result.saved > 5) {
           setOriginalText(inputText);
           setInputText(result.optimized);
           setSavedChars(result.saved);
           setOptimizationShown(true);
           
-          // Auto-hide optimization badge after 8 seconds
           setTimeout(() => setOptimizationShown(false), 8000);
         }
       }
@@ -137,23 +132,16 @@ export function useQRGenerator({
   const handleInputChange = useCallback((text: string) => {
     setInputText(text);
     setOptimizationShown(false);
-    setError(null); // Clear errors when input changes
-    setLastTypingTime(Date.now()); // Track when user last typed
+    setError(null);
+    setLastTypingTime(Date.now());
+    
+    // Clear QR code when input changes but don't auto-generate
+    if (!text.trim()) {
+      setQrCodeDataURL('');
+    }
   }, []);
 
-  // Improved debounced QR generation with better performance for text input
-  useEffect(() => {
-    // Use shorter debounce for text content to improve responsiveness
-    const actualDebounceDelay = contentType === 'text' ? 150 : debounceDelay;
-    
-    const timeoutId = setTimeout(() => {
-      if (inputText.trim()) {
-        generateQRCode(inputText);
-      }
-    }, actualDebounceDelay);
-
-    return () => clearTimeout(timeoutId);
-  }, [inputText, generateQRCode, debounceDelay, contentType]);
+  // REMOVED: Auto QR generation effect - now only manual generation
 
   return {
     inputText,
