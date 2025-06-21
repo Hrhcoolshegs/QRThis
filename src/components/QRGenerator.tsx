@@ -8,7 +8,7 @@ import { QRInput } from '@/components/QRInput';
 import { QRDisplay } from '@/components/QRDisplay';
 import { BatchProcessor } from '@/components/BatchProcessor';
 import { Button } from '@/components/ui/button';
-import { Download, Trash2, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { Download, Trash2, X, ChevronDown, ChevronUp, Sparkles, Zap, BarChart3 } from 'lucide-react';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 
 const MAX_CHARACTERS = 2000;
@@ -117,27 +117,24 @@ export function QRGenerator() {
     <div className="w-full max-w-7xl mx-auto space-y-8 md:space-y-12">
       
       {/* Main QR Generator Section */}
-      <div className="bg-white dark:bg-gray-800/30 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-700 p-4 md:p-8">
-        <div className="text-center mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900 dark:text-white">
-            🎯 Quick QR Generator
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg max-w-2xl mx-auto">
-            Enter your text or URL below to create a QR code instantly
+      <div className="bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-gray-200/50 dark:border-gray-700/50 p-6 md:p-10">
+        <div className="text-center mb-8 md:mb-10">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <Zap className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 via-gray-700 to-gray-900 dark:from-white dark:via-gray-200 dark:to-white bg-clip-text text-transparent">
+              Quick QR Generator
+            </h2>
+          </div>
+          <p className="text-gray-600 dark:text-gray-300 text-lg md:text-xl max-w-3xl mx-auto leading-relaxed">
+            Enter your text or URL below to create a QR code instantly with AI precision
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 md:gap-12 items-start">
+        <div className="grid lg:grid-cols-2 gap-10 md:gap-16 items-start">
           {/* Input Section */}
-          <div className="space-y-4 md:space-y-6">
-            {/* AI Assistant */}
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-4 border border-blue-200 dark:border-blue-700/50">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-semibold text-blue-900 dark:text-blue-100 text-sm md:text-base">✨ Need Help?</h4>
-              </div>
-              <AIAssistant onContentGenerated={handleAIGenerated} />
-            </div>
-
+          <div className="space-y-6 md:space-y-8">
             {/* QR Input */}
             <QRInput
               inputText={inputText}
@@ -161,7 +158,7 @@ export function QRGenerator() {
                   onClick={handleClearInput}
                   variant="outline"
                   size="sm"
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-gray-500 hover:text-gray-700 border-gray-300/50 hover:border-gray-400/50 backdrop-blur-sm"
                 >
                   <Trash2 size={16} className="mr-2" />
                   Clear Input
@@ -171,7 +168,7 @@ export function QRGenerator() {
 
             {/* Smart Tips */}
             {personalizedTips.length > 0 && (
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-xl p-4 border border-amber-200 dark:border-amber-700/50">
+              <div className="bg-gradient-to-br from-amber-50/80 to-orange-50/80 dark:from-amber-900/20 dark:to-orange-900/20 backdrop-blur-xl rounded-2xl p-6 border border-amber-200/50 dark:border-amber-700/30 shadow-lg">
                 <PersonalizedTips suggestions={personalizedTips} />
               </div>
             )}
@@ -189,13 +186,38 @@ export function QRGenerator() {
         </div>
       </div>
 
+      {/* AI Assistant Section - Moved to prominent location */}
+      <div className="bg-gradient-to-br from-blue-50/80 via-indigo-50/80 to-purple-50/80 dark:from-blue-900/30 dark:via-indigo-900/30 dark:to-purple-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-blue-200/50 dark:border-blue-700/30 p-6 md:p-10">
+        <div className="text-center mb-8">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500 rounded-2xl flex items-center justify-center shadow-lg animate-pulse">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">
+              AI Assistant
+            </h2>
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 text-lg md:text-xl max-w-4xl mx-auto leading-relaxed mb-8">
+            Meet Alexander, your intelligent QR code assistant. Get instant help with WiFi codes, business cards, websites, and more. Just describe what you need!
+          </p>
+          <div className="flex justify-center">
+            <AIAssistant onContentGenerated={handleAIGenerated} />
+          </div>
+        </div>
+      </div>
+
       {/* Smart Batch Processing Section */}
-      <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-2xl shadow-lg border border-green-200 dark:border-green-700 p-4 md:p-8">
-        <div className="text-center mb-6 md:mb-8">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900 dark:text-white">
-            ⚡ Smart Batch Processing
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-base md:text-lg max-w-3xl mx-auto">
+      <div className="bg-gradient-to-br from-green-50/80 via-emerald-50/80 to-teal-50/80 dark:from-green-900/30 dark:via-emerald-900/30 dark:to-teal-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-green-200/50 dark:border-green-700/30 p-6 md:p-10">
+        <div className="text-center mb-8 md:mb-10">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center shadow-lg">
+              <BarChart3 className="w-6 h-6 text-white" />
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              Smart Batch Processing
+            </h2>
+          </div>
+          <p className="text-gray-700 dark:text-gray-300 text-lg md:text-xl max-w-4xl mx-auto leading-relaxed">
             Generate multiple QR codes at once - perfect for events, inventory, or bulk operations
           </p>
         </div>
@@ -204,15 +226,15 @@ export function QRGenerator() {
         
         {/* Batch Results */}
         {batchResults.length > 0 && (
-          <div className="mt-8 p-6 bg-white dark:bg-gray-800 rounded-xl border border-green-200 dark:border-green-700">
-            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 gap-4">
-              <h4 className="text-lg md:text-xl font-semibold text-green-800 dark:text-green-200">
+          <div className="mt-10 p-8 bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-2xl border border-green-200/50 dark:border-green-700/30 shadow-lg">
+            <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+              <h4 className="text-xl md:text-2xl font-semibold bg-gradient-to-r from-green-700 to-emerald-700 dark:from-green-300 dark:to-emerald-300 bg-clip-text text-transparent">
                 📦 Batch Results ({batchResults.length} QR codes)
               </h4>
               <div className="flex gap-3">
                 <Button
                   onClick={handleBatchDownload}
-                  className="bg-green-600 hover:bg-green-700 text-white text-sm"
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300"
                   size="sm"
                 >
                   <Download size={16} className="mr-2" />
@@ -221,7 +243,7 @@ export function QRGenerator() {
                 <Button
                   onClick={handleClearBatchResults}
                   variant="outline"
-                  className="text-red-600 hover:text-red-700"
+                  className="text-red-600 hover:text-red-700 border-red-300/50 hover:border-red-400/50"
                   size="sm"
                 >
                   <Trash2 size={16} />
@@ -229,31 +251,31 @@ export function QRGenerator() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
               {batchResults.slice(0, 12).map((item, index) => (
                 <div key={index} className="text-center relative group">
                   <div className="relative">
                     <img 
                       src={item.qrDataURL} 
                       alt={`QR ${index + 1}`}
-                      className="w-16 h-16 md:w-20 md:h-20 mx-auto border rounded-lg shadow-sm"
+                      className="w-20 h-20 md:w-24 md:h-24 mx-auto border-2 border-gray-200/50 dark:border-gray-700/50 rounded-xl shadow-lg transition-all duration-300 group-hover:scale-105"
                     />
                     <Button
                       onClick={() => handleRemoveBatchItem(index)}
                       variant="ghost"
                       size="sm"
-                      className="absolute -top-2 -right-2 w-6 h-6 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-2 -right-2 w-7 h-7 p-0 bg-red-500 hover:bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-300 shadow-lg"
                     >
-                      <X size={12} />
+                      <X size={14} />
                     </Button>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-2 truncate">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-3 font-medium truncate">
                     {item.type}
                   </p>
                 </div>
               ))}
               {batchResults.length > 12 && (
-                <div className="flex items-center justify-center text-sm text-gray-500 bg-gray-100 dark:bg-gray-700 rounded-lg">
+                <div className="flex items-center justify-center text-sm text-gray-500 bg-gray-100/60 dark:bg-gray-700/60 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
                   +{batchResults.length - 12} more
                 </div>
               )}
@@ -263,36 +285,36 @@ export function QRGenerator() {
       </div>
 
       {/* AI Art QR Section - Progressive Disclosure */}
-      <div className="bg-gradient-to-br from-purple-50 to-indigo-50 dark:from-purple-900/20 dark:to-indigo-900/20 rounded-2xl shadow-lg border border-purple-200 dark:border-purple-700 p-4 md:p-8">
-        <div className="text-center mb-6">
+      <div className="bg-gradient-to-br from-purple-50/80 via-pink-50/80 to-rose-50/80 dark:from-purple-900/30 dark:via-pink-900/30 dark:to-rose-900/30 backdrop-blur-xl rounded-3xl shadow-2xl border border-purple-200/50 dark:border-purple-700/30 p-6 md:p-10">
+        <div className="text-center mb-8">
           <Button
             onClick={() => setShowAIArtSection(!showAIArtSection)}
             variant="ghost"
-            className="w-full flex items-center justify-center space-x-3 p-6 hover:bg-purple-100 dark:hover:bg-purple-900/30 transition-all duration-300"
+            className="w-full flex items-center justify-center space-x-4 p-8 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 transition-all duration-300 rounded-2xl group"
           >
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                <span className="text-white text-xl">✨</span>
+            <div className="flex items-center space-x-4">
+              <div className="w-14 h-14 bg-gradient-to-br from-purple-500 via-pink-500 to-rose-500 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 transition-all duration-300">
+                <Sparkles className="w-7 h-7 text-white" />
               </div>
               <div className="text-left">
-                <h2 className="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h2 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 bg-clip-text text-transparent">
                   AI Art QR Generator
                 </h2>
-                <p className="text-sm md:text-base text-gray-600 dark:text-gray-300">
+                <p className="text-base md:text-lg text-gray-600 dark:text-gray-300 mt-1">
                   Transform your QR codes into stunning artwork (Coming Soon)
                 </p>
               </div>
             </div>
             {showAIArtSection ? (
-              <ChevronUp className="w-6 h-6 text-purple-600" />
+              <ChevronUp className="w-7 h-7 text-purple-600 group-hover:scale-110 transition-all duration-300" />
             ) : (
-              <ChevronDown className="w-6 h-6 text-purple-600" />
+              <ChevronDown className="w-7 h-7 text-purple-600 group-hover:scale-110 transition-all duration-300" />
             )}
           </Button>
         </div>
         
         {showAIArtSection && (
-          <div className="mt-6 animate-in slide-in-from-top-2 duration-300">
+          <div className="mt-8 animate-fade-in">
             <AIArtQR 
               inputText={inputText}
               onGenerate={handleArtGenerate}
