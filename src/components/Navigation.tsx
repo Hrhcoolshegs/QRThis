@@ -56,12 +56,12 @@ export function Navigation() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2 group">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
+            <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
               <span className="text-white font-bold text-sm">Q</span>
             </div>
             <span className="font-bold text-xl text-gray-900 dark:text-white">QRThis</span>
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs px-2 py-1 rounded-full font-medium">
-              AI
+            <span className="bg-purple-600 text-white text-xs px-2 py-1 rounded-full font-medium">
+              AI-POWERED
             </span>
           </Link>
 
