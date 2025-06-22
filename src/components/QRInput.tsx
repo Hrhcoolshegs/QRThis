@@ -75,20 +75,24 @@ export function QRInput({
     
     switch (activeTab) {
       case 'url':
-        validation = validateURL(inputText);
+        const urlValidation = validateURL(inputText);
+        validation = { isValid: urlValidation.isValid, error: urlValidation.error || 'Invalid URL' };
         break;
       case 'email':
         const emailContent = inputText.replace('mailto:', '');
-        validation = validateEmail(emailContent);
+        const emailValidation = validateEmail(emailContent);
+        validation = { isValid: emailValidation.isValid, error: emailValidation.error || 'Invalid email' };
         break;
       case 'phone':
         const phoneContent = inputText.replace('tel:', '');
-        validation = validatePhone(phoneContent);
+        const phoneValidation = validatePhone(phoneContent);
+        validation = { isValid: phoneValidation.isValid, error: phoneValidation.error || 'Invalid phone number' };
         break;
       case 'wifi':
         // For WiFi, we need both SSID and password from formData
         if (formData.ssid && formData.password) {
-          validation = validateWiFiNetwork(formData.ssid, formData.password, formData.security || 'WPA');
+          const wifiValidation = validateWiFiNetwork(formData.ssid, formData.password, formData.security || 'WPA');
+          validation = { isValid: wifiValidation.isValid, error: wifiValidation.error || 'Invalid WiFi configuration' };
         } else {
           validation = { isValid: false, error: 'WiFi network name and password are required' };
         }
@@ -96,18 +100,18 @@ export function QRInput({
       case 'contact':
         // For contact, we need at least a name
         if (formData.name && formData.name.trim().length >= 2) {
-          validation = { isValid: true };
+          validation = { isValid: true, error: '' };
           // Validate optional fields if they exist
           if (formData.email) {
             const emailValidation = validateEmail(formData.email);
             if (!emailValidation.isValid) {
-              validation = { isValid: false, error: `Email: ${emailValidation.error}` };
+              validation = { isValid: false, error: `Email: ${emailValidation.error || 'Invalid email'}` };
             }
           }
           if (formData.phone && validation.isValid) {
             const phoneValidation = validatePhone(formData.phone);
             if (!phoneValidation.isValid) {
-              validation = { isValid: false, error: `Phone: ${phoneValidation.error}` };
+              validation = { isValid: false, error: `Phone: ${phoneValidation.error || 'Invalid phone'}` };
             }
           }
         } else {
@@ -117,15 +121,16 @@ export function QRInput({
       case 'text':
         // Text validation - check for basic safety
         const textValidation = validateQRContent(inputText, 'text');
-        validation = textValidation;
+        validation = { isValid: textValidation.isValid, error: textValidation.error || 'Invalid text content' };
         break;
       default:
-        validation = validateQRContent(inputText, detectContentType(inputText));
+        const defaultValidation = validateQRContent(inputText, detectContentType(inputText));
+        validation = { isValid: defaultValidation.isValid, error: defaultValidation.error || 'Invalid content' };
     }
 
     if (!validation.isValid) {
       setIsValid(false);
-      setValidationError(validation.error || 'Invalid content');
+      setValidationError(validation.error);
       return;
     }
 
@@ -153,15 +158,15 @@ export function QRInput({
     switch (fieldName) {
       case 'url':
         const urlValidation = validateURL(value);
-        return urlValidation.isValid ? null : urlValidation.error || 'Invalid URL';
+        return urlValidation.isValid ? null : (urlValidation.error || 'Invalid URL');
         
       case 'email':
         const emailValidation = validateEmail(value);
-        return emailValidation.isValid ? null : emailValidation.error || 'Invalid email';
+        return emailValidation.isValid ? null : (emailValidation.error || 'Invalid email');
         
       case 'phone':
         const phoneValidation = validatePhone(value);
-        return phoneValidation.isValid ? null : phoneValidation.error || 'Invalid phone number';
+        return phoneValidation.isValid ? null : (phoneValidation.error || 'Invalid phone number');
         
       case 'ssid':
         if (value.length < 1 || value.length > 32) {
