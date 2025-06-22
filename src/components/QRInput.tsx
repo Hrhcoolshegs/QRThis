@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
@@ -50,18 +49,18 @@ export function QRInput({
   contentType
 }: QRInputProps) {
   const { toast } = useToast();
-  const [isValid, setIsValid] = useState(true);
+  const [isValid, setIsValid] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
   const [isFocused, setIsFocused] = useState(false);
   const [activeTab, setActiveTab] = useState('url');
   const [formData, setFormData] = useState<FormData>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Validate input in real-time
+  // Comprehensive validation that runs on every input change
   useEffect(() => {
     if (!inputText.trim()) {
-      setIsValid(true);
-      setValidationError('');
+      setIsValid(false);
+      setValidationError('Content is required');
       return;
     }
 
@@ -71,17 +70,69 @@ export function QRInput({
       return;
     }
 
-    // Validate content based on type
-    const validation = validateQRContent(inputText, detectContentType(inputText));
+    // Validate based on active tab type
+    let validation = { isValid: false, error: 'Invalid content' };
+    
+    switch (activeTab) {
+      case 'url':
+        validation = validateURL(inputText);
+        break;
+      case 'email':
+        const emailContent = inputText.replace('mailto:', '');
+        validation = validateEmail(emailContent);
+        break;
+      case 'phone':
+        const phoneContent = inputText.replace('tel:', '');
+        validation = validatePhone(phoneContent);
+        break;
+      case 'wifi':
+        // For WiFi, we need both SSID and password from formData
+        if (formData.ssid && formData.password) {
+          validation = validateWiFiNetwork(formData.ssid, formData.password, formData.security || 'WPA');
+        } else {
+          validation = { isValid: false, error: 'WiFi network name and password are required' };
+        }
+        break;
+      case 'contact':
+        // For contact, we need at least a name
+        if (formData.name && formData.name.trim().length >= 2) {
+          validation = { isValid: true };
+          // Validate optional fields if they exist
+          if (formData.email) {
+            const emailValidation = validateEmail(formData.email);
+            if (!emailValidation.isValid) {
+              validation = { isValid: false, error: `Email: ${emailValidation.error}` };
+            }
+          }
+          if (formData.phone && validation.isValid) {
+            const phoneValidation = validatePhone(formData.phone);
+            if (!phoneValidation.isValid) {
+              validation = { isValid: false, error: `Phone: ${phoneValidation.error}` };
+            }
+          }
+        } else {
+          validation = { isValid: false, error: 'Contact name is required (min 2 characters)' };
+        }
+        break;
+      case 'text':
+        // Text validation - check for basic safety
+        const textValidation = validateQRContent(inputText, 'text');
+        validation = textValidation;
+        break;
+      default:
+        validation = validateQRContent(inputText, detectContentType(inputText));
+    }
+
     if (!validation.isValid) {
       setIsValid(false);
       setValidationError(validation.error || 'Invalid content');
       return;
     }
 
+    // All validations passed
     setIsValid(true);
     setValidationError('');
-  }, [inputText, isOverLimit, characterCount, maxCharacters]);
+  }, [inputText, isOverLimit, characterCount, maxCharacters, activeTab, formData]);
 
   const validateField = (fieldName: string, value: string, type: string): string | null => {
     if (!value.trim()) {
@@ -157,7 +208,7 @@ export function QRInput({
     const newFormData = { ...formData, [fieldName]: value };
     setFormData(newFormData);
     
-    // Validate field
+    // Validate field immediately
     const error = validateField(fieldName, value, activeTab);
     const newFieldErrors = { ...fieldErrors };
     if (error) {
@@ -206,6 +257,7 @@ export function QRInput({
   };
 
   const handleGenerate = () => {
+    // Pre-generation validation checks
     if (!inputText.trim()) {
       toast({
         title: "Input Required",
@@ -215,26 +267,28 @@ export function QRInput({
       return;
     }
 
-    // Check for field errors
-    const hasErrors = Object.keys(fieldErrors).length > 0;
-    if (hasErrors) {
+    // Check for field-specific errors
+    const hasFieldErrors = Object.keys(fieldErrors).length > 0;
+    if (hasFieldErrors) {
       toast({
         title: "Validation Error",
-        description: "Please fix the errors in the form",
+        description: "Please fix the errors in the form before generating QR code",
         variant: "destructive"
       });
       return;
     }
 
+    // Check overall validation
     if (!isValid) {
       toast({
         title: "Validation Error",
-        description: validationError,
+        description: validationError || "Please check your input and try again",
         variant: "destructive"
       });
       return;
     }
 
+    // All validations passed - proceed with generation
     onGenerate();
   };
 
@@ -450,6 +504,14 @@ export function QRInput({
             <span>{validationError}</span>
           </div>
         )}
+
+        {/* Validation Success */}
+        {isValid && inputText.trim() && (
+          <div className="flex items-center space-x-2 text-green-600 dark:text-green-400 text-sm mt-2 animate-fade-in">
+            <CheckCircle size={16} />
+            <span>Content validated and ready to generate</span>
+          </div>
+        )}
       </div>
     );
   };
@@ -510,15 +572,13 @@ export function QRInput({
       <Button
         data-generate-button
         onClick={handleGenerate}
-        disabled={isGenerating || !inputText.trim() || Object.keys(fieldErrors).length > 0}
+        disabled={isGenerating || !inputText.trim() || !isValid || Object.keys(fieldErrors).length > 0}
         className={`w-full font-bold h-14 text-lg rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${
           isGenerating 
             ? 'bg-gradient-to-r from-blue-400 to-indigo-400 cursor-not-allowed' 
-            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95'
-        } ${
-          !inputText.trim() || Object.keys(fieldErrors).length > 0
-            ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' 
-            : ''
+            : isValid && inputText.trim() && Object.keys(fieldErrors).length === 0
+            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95'
+            : 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed'
         }`}
       >
         {isGenerating ? (
@@ -529,7 +589,14 @@ export function QRInput({
         ) : (
           <div className="flex items-center justify-center space-x-3">
             <QrCode className="w-6 h-6" />
-            <span>Generate QR Code</span>
+            <span>
+              {!inputText.trim() 
+                ? 'Enter Content First' 
+                : !isValid 
+                ? 'Fix Errors to Generate' 
+                : 'Generate QR Code'
+              }
+            </span>
           </div>
         )}
       </Button>

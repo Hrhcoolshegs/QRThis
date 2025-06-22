@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import QRCode from 'qrcode';
 import { optimizeText, detectContentType, getOptimalErrorCorrection } from '@/utils/smartOptimization';
 import { trackUsage, getPersonalizedTips } from '@/utils/analytics';
+import { validateQRContent } from '@/utils/securityUtils';
 
 interface UseQRGeneratorProps {
   maxCharacters?: number;
@@ -88,11 +89,19 @@ export function useQRGenerator({
       return;
     }
 
+    // Pre-generation validation
+    const validation = validateQRContent(text, detectContentType(text));
+    if (!validation.isValid) {
+      setError(validation.error || 'Invalid content detected');
+      setQrCodeDataURL('');
+      return;
+    }
+
     setIsGenerating(true);
     setError(null);
 
     try {
-      const dataURL = await QRCode.toDataURL(text, {
+      const dataURL = await QRCode.toDataURL(validation.sanitized || text, {
         errorCorrectionLevel: errorCorrectionLevel,
         type: 'image/png',
         quality: 0.92,
@@ -113,7 +122,7 @@ export function useQRGenerator({
       
     } catch (err) {
       console.error('QR Code generation failed:', err);
-      setError('Failed to generate QR code. Please try again.');
+      setError('Failed to generate QR code. Please check your content and try again.');
       setQrCodeDataURL('');
     } finally {
       setIsGenerating(false);
@@ -140,8 +149,6 @@ export function useQRGenerator({
       setQrCodeDataURL('');
     }
   }, []);
-
-  // REMOVED: Auto QR generation effect - now only manual generation
 
   return {
     inputText,
