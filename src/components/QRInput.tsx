@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from "@/hooks/use-toast";
 import { QrCode, AlertCircle, CheckCircle, Undo2, Loader2, Globe, Mail, MessageSquare, Smartphone, Wifi, User } from 'lucide-react';
 import { optimizeText, detectContentType } from '@/utils/smartOptimization';
-import { validateQRContent } from '@/utils/securityUtils';
+import { validateQRContent, validateURL, validateEmail, validatePhone, validateWiFiNetwork } from '@/utils/securityUtils';
 
 interface QRInputProps {
   inputText: string;
@@ -32,6 +32,10 @@ const contentTypes = [
   { id: 'email', label: 'Email', icon: Mail, placeholder: 'hello@example.com' }
 ];
 
+interface FormData {
+  [key: string]: string;
+}
+
 export function QRInput({
   inputText,
   onInputChange,
@@ -50,6 +54,8 @@ export function QRInput({
   const [validationError, setValidationError] = useState<string>('');
   const [isFocused, setIsFocused] = useState(false);
   const [activeTab, setActiveTab] = useState('url');
+  const [formData, setFormData] = useState<FormData>({});
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Validate input in real-time
   useEffect(() => {
@@ -77,11 +83,144 @@ export function QRInput({
     setValidationError('');
   }, [inputText, isOverLimit, characterCount, maxCharacters]);
 
+  const validateField = (fieldName: string, value: string, type: string): string | null => {
+    if (!value.trim()) {
+      const requiredFields = {
+        url: ['url'],
+        email: ['email'],
+        phone: ['phone'],
+        wifi: ['ssid', 'password'],
+        contact: ['name']
+      };
+      
+      if (requiredFields[type as keyof typeof requiredFields]?.includes(fieldName)) {
+        return `${fieldName.charAt(0).toUpperCase() + fieldName.slice(1)} is required`;
+      }
+      return null;
+    }
+
+    switch (fieldName) {
+      case 'url':
+        const urlValidation = validateURL(value);
+        return urlValidation.isValid ? null : urlValidation.error || 'Invalid URL';
+        
+      case 'email':
+        const emailValidation = validateEmail(value);
+        return emailValidation.isValid ? null : emailValidation.error || 'Invalid email';
+        
+      case 'phone':
+        const phoneValidation = validatePhone(value);
+        return phoneValidation.isValid ? null : phoneValidation.error || 'Invalid phone number';
+        
+      case 'ssid':
+        if (value.length < 1 || value.length > 32) {
+          return 'Network name must be 1-32 characters';
+        }
+        return null;
+        
+      case 'password':
+        if (type === 'wifi' && value.length < 8) {
+          return 'WiFi password must be at least 8 characters';
+        }
+        return null;
+        
+      case 'name':
+        if (value.length < 2) {
+          return 'Name must be at least 2 characters';
+        }
+        return null;
+        
+      case 'organization':
+        if (value && value.length > 100) {
+          return 'Organization name too long (max 100 characters)';
+        }
+        return null;
+        
+      case 'subject':
+        if (value && value.length > 200) {
+          return 'Subject too long (max 200 characters)';
+        }
+        return null;
+        
+      case 'body':
+        if (value && value.length > 1000) {
+          return 'Message too long (max 1000 characters)';
+        }
+        return null;
+        
+      default:
+        return null;
+    }
+  };
+
+  const handleFieldChange = (fieldName: string, value: string) => {
+    const newFormData = { ...formData, [fieldName]: value };
+    setFormData(newFormData);
+    
+    // Validate field
+    const error = validateField(fieldName, value, activeTab);
+    const newFieldErrors = { ...fieldErrors };
+    if (error) {
+      newFieldErrors[fieldName] = error;
+    } else {
+      delete newFieldErrors[fieldName];
+    }
+    setFieldErrors(newFieldErrors);
+    
+    // Update main input for simple types
+    if (['url', 'email', 'phone', 'text'].includes(activeTab)) {
+      onInputChange(value);
+    } else {
+      // For complex types, format the data
+      formatComplexData(activeTab, newFormData);
+    }
+  };
+
+  const formatComplexData = (type: string, data: FormData) => {
+    let formatted = '';
+    
+    switch (type) {
+      case 'wifi':
+        if (data.ssid && data.password) {
+          const security = data.security || 'WPA';
+          formatted = `WIFI:T:${security};S:${data.ssid};P:${data.password};;`;
+        }
+        break;
+        
+      case 'contact':
+        if (data.name) {
+          let vcard = 'BEGIN:VCARD\nVERSION:3.0\n';
+          vcard += `FN:${data.name}\n`;
+          if (data.phone) vcard += `TEL:${data.phone}\n`;
+          if (data.email) vcard += `EMAIL:${data.email}\n`;
+          if (data.organization) vcard += `ORG:${data.organization}\n`;
+          vcard += 'END:VCARD';
+          formatted = vcard;
+        }
+        break;
+    }
+    
+    if (formatted) {
+      onInputChange(formatted);
+    }
+  };
+
   const handleGenerate = () => {
     if (!inputText.trim()) {
       toast({
         title: "Input Required",
         description: "Please enter some content to generate a QR code",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check for field errors
+    const hasErrors = Object.keys(fieldErrors).length > 0;
+    if (hasErrors) {
+      toast({
+        title: "Validation Error",
+        description: "Please fix the errors in the form",
         variant: "destructive"
       });
       return;
@@ -96,24 +235,19 @@ export function QRInput({
       return;
     }
 
-    // Add visual feedback and animation
-    const button = document.querySelector('[data-generate-button]') as HTMLElement;
-    if (button) {
-      button.style.transform = 'scale(0.98)';
-      setTimeout(() => {
-        button.style.transform = 'scale(1)';
-      }, 150);
-    }
-
     onGenerate();
   };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
+    setFormData({});
+    setFieldErrors({});
     const selectedType = contentTypes.find(type => type.id === value);
-    if (selectedType) {
+    if (selectedType && ['url', 'email', 'phone', 'text'].includes(value)) {
       onInputChange(selectedType.placeholder);
       setIsFocused(true);
+    } else {
+      onInputChange('');
     }
   };
 
@@ -123,26 +257,56 @@ export function QRInput({
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Network Name (SSID)
+              Network Name (SSID) *
             </label>
             <Input
+              value={formData.ssid || ''}
+              onChange={(e) => handleFieldChange('ssid', e.target.value)}
               placeholder="My WiFi Network"
-              className="w-full"
+              className={`w-full ${fieldErrors.ssid ? 'border-red-500' : ''}`}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
+            {fieldErrors.ssid && (
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <AlertCircle size={12} className="mr-1" />
+                {fieldErrors.ssid}
+              </p>
+            )}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Password
+              Password *
             </label>
             <Input
               type="password"
-              placeholder="Enter WiFi password"
-              className="w-full"
+              value={formData.password || ''}
+              onChange={(e) => handleFieldChange('password', e.target.value)}
+              placeholder="Enter WiFi password (min 8 characters)"
+              className={`w-full ${fieldErrors.password ? 'border-red-500' : ''}`}
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
             />
+            {fieldErrors.password && (
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <AlertCircle size={12} className="mr-1" />
+                {fieldErrors.password}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Security Type
+            </label>
+            <select
+              value={formData.security || 'WPA'}
+              onChange={(e) => handleFieldChange('security', e.target.value)}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800"
+            >
+              <option value="WPA">WPA/WPA2</option>
+              <option value="WEP">WEP</option>
+              <option value="nopass">Open Network</option>
+            </select>
           </div>
         </div>
       );
@@ -154,28 +318,72 @@ export function QRInput({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                First Name
+                Full Name *
               </label>
-              <Input placeholder="John" className="w-full" />
+              <Input
+                value={formData.name || ''}
+                onChange={(e) => handleFieldChange('name', e.target.value)}
+                placeholder="John Doe"
+                className={`w-full ${fieldErrors.name ? 'border-red-500' : ''}`}
+              />
+              {fieldErrors.name && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle size={12} className="mr-1" />
+                  {fieldErrors.name}
+                </p>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Last Name
+                Phone
               </label>
-              <Input placeholder="Doe" className="w-full" />
+              <Input
+                value={formData.phone || ''}
+                onChange={(e) => handleFieldChange('phone', e.target.value)}
+                placeholder="+1 (555) 123-4567"
+                className={`w-full ${fieldErrors.phone ? 'border-red-500' : ''}`}
+              />
+              {fieldErrors.phone && (
+                <p className="text-red-500 text-xs mt-1 flex items-center">
+                  <AlertCircle size={12} className="mr-1" />
+                  {fieldErrors.phone}
+                </p>
+              )}
             </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Phone
-            </label>
-            <Input placeholder="+1 (555) 123-4567" className="w-full" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               Email
             </label>
-            <Input placeholder="john@example.com" className="w-full" />
+            <Input
+              value={formData.email || ''}
+              onChange={(e) => handleFieldChange('email', e.target.value)}
+              placeholder="john@example.com"
+              className={`w-full ${fieldErrors.email ? 'border-red-500' : ''}`}
+            />
+            {fieldErrors.email && (
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <AlertCircle size={12} className="mr-1" />
+                {fieldErrors.email}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Organization
+            </label>
+            <Input
+              value={formData.organization || ''}
+              onChange={(e) => handleFieldChange('organization', e.target.value)}
+              placeholder="Company Name"
+              className={`w-full ${fieldErrors.organization ? 'border-red-500' : ''}`}
+            />
+            {fieldErrors.organization && (
+              <p className="text-red-500 text-xs mt-1 flex items-center">
+                <AlertCircle size={12} className="mr-1" />
+                {fieldErrors.organization}
+              </p>
+            )}
           </div>
         </div>
       );
@@ -189,31 +397,36 @@ export function QRInput({
             : 'shadow-md hover:shadow-lg'
         }`}>
           {type.id === 'text' ? (
-            <textarea
-              value={inputText}
-              onChange={(e) => onInputChange(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={type.placeholder}
-              className={`w-full h-32 p-6 border-2 rounded-2xl resize-none focus:outline-none transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 text-lg ${
-                !isValid && inputText.trim()
-                  ? 'border-red-300 focus:border-red-500'
-                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'
-              }`}
-            />
+            <div>
+              <textarea
+                value={inputText}
+                onChange={(e) => onInputChange(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder={type.placeholder}
+                className={`w-full h-32 p-6 border-2 rounded-2xl resize-none focus:outline-none transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 text-lg ${
+                  !isValid && inputText.trim()
+                    ? 'border-red-500'
+                    : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'
+                }`}
+                maxLength={maxCharacters}
+              />
+            </div>
           ) : (
-            <Input
-              value={inputText}
-              onChange={(e) => onInputChange(e.target.value)}
-              onFocus={() => setIsFocused(true)}
-              onBlur={() => setIsFocused(false)}
-              placeholder={type.placeholder}
-              className={`w-full h-16 p-6 border-2 rounded-2xl focus:outline-none transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 text-lg ${
-                !isValid && inputText.trim()
-                  ? 'border-red-300 focus:border-red-500'
-                  : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'
-              }`}
-            />
+            <div>
+              <Input
+                value={inputText}
+                onChange={(e) => onInputChange(e.target.value)}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+                placeholder={type.placeholder}
+                className={`w-full h-16 p-6 border-2 rounded-2xl focus:outline-none transition-all duration-300 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-900/50 text-lg ${
+                  !isValid && inputText.trim()
+                    ? 'border-red-500'
+                    : 'border-gray-200 dark:border-gray-700 focus:border-blue-500'
+                }`}
+              />
+            </div>
           )}
           
           {/* Character Counter */}
@@ -297,13 +510,13 @@ export function QRInput({
       <Button
         data-generate-button
         onClick={handleGenerate}
-        disabled={isGenerating || !inputText.trim()}
+        disabled={isGenerating || !inputText.trim() || Object.keys(fieldErrors).length > 0}
         className={`w-full font-bold h-14 text-lg rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-[1.02] ${
           isGenerating 
             ? 'bg-gradient-to-r from-blue-400 to-indigo-400 cursor-not-allowed' 
             : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95'
         } ${
-          !inputText.trim() 
+          !inputText.trim() || Object.keys(fieldErrors).length > 0
             ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' 
             : ''
         }`}

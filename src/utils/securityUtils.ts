@@ -22,7 +22,13 @@ export const validateURL = (url: string): { isValid: boolean; error?: string } =
   }
 
   try {
-    const urlObject = new URL(trimmedUrl);
+    // Add protocol if missing
+    let urlToTest = trimmedUrl;
+    if (!urlToTest.match(/^https?:\/\//i)) {
+      urlToTest = 'https://' + urlToTest;
+    }
+    
+    const urlObject = new URL(urlToTest);
     
     // Check for allowed protocols
     const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:', 'sms:'];
@@ -49,10 +55,136 @@ export const validateURL = (url: string): { isValid: boolean; error?: string } =
       }
     }
 
+    // Check for valid domain structure
+    if (urlObject.hostname.length < 4 || !urlObject.hostname.includes('.')) {
+      return { isValid: false, error: 'Invalid domain format' };
+    }
+
     return { isValid: true };
   } catch (error) {
     return { isValid: false, error: 'Invalid URL format' };
   }
+};
+
+// Email validation with comprehensive checks
+export const validateEmail = (email: string): { isValid: boolean; error?: string } => {
+  if (!email || typeof email !== 'string') {
+    return { isValid: false, error: 'Email is required' };
+  }
+
+  const trimmedEmail = email.trim().toLowerCase();
+  
+  if (trimmedEmail.length === 0) {
+    return { isValid: false, error: 'Email cannot be empty' };
+  }
+
+  if (trimmedEmail.length > 254) {
+    return { isValid: false, error: 'Email is too long (max 254 characters)' };
+  }
+
+  // Comprehensive email regex
+  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  
+  if (!emailRegex.test(trimmedEmail)) {
+    return { isValid: false, error: 'Invalid email format' };
+  }
+
+  // Check for suspicious patterns
+  const suspiciousPatterns = [
+    /javascript:/gi,
+    /<script/gi,
+    /on\w+=/gi
+  ];
+
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(trimmedEmail)) {
+      return { isValid: false, error: 'Email contains invalid characters' };
+    }
+  }
+
+  return { isValid: true };
+};
+
+// Phone number validation with international support
+export const validatePhone = (phone: string): { isValid: boolean; error?: string } => {
+  if (!phone || typeof phone !== 'string') {
+    return { isValid: false, error: 'Phone number is required' };
+  }
+
+  const trimmedPhone = phone.trim();
+  
+  if (trimmedPhone.length === 0) {
+    return { isValid: false, error: 'Phone number cannot be empty' };
+  }
+
+  // Remove common formatting characters for validation
+  const cleanPhone = trimmedPhone.replace(/[\s\-\(\)\.]/g, '');
+  
+  // Check for minimum and maximum length
+  if (cleanPhone.length < 7) {
+    return { isValid: false, error: 'Phone number too short (minimum 7 digits)' };
+  }
+  
+  if (cleanPhone.length > 15) {
+    return { isValid: false, error: 'Phone number too long (maximum 15 digits)' };
+  }
+
+  // Check if it contains only valid characters
+  const phoneRegex = /^\+?[0-9]+$/;
+  if (!phoneRegex.test(cleanPhone)) {
+    return { isValid: false, error: 'Phone number contains invalid characters' };
+  }
+
+  // International format validation (optional + followed by digits)
+  const internationalRegex = /^\+?[1-9]\d{6,14}$/;
+  if (!internationalRegex.test(cleanPhone)) {
+    return { isValid: false, error: 'Invalid phone number format' };
+  }
+
+  return { isValid: true };
+};
+
+// WiFi network validation
+export const validateWiFiNetwork = (ssid: string, password: string, security: string = 'WPA'): { isValid: boolean; error?: string } => {
+  // SSID validation
+  if (!ssid || typeof ssid !== 'string') {
+    return { isValid: false, error: 'Network name (SSID) is required' };
+  }
+
+  const trimmedSSID = ssid.trim();
+  if (trimmedSSID.length === 0) {
+    return { isValid: false, error: 'Network name cannot be empty' };
+  }
+
+  if (trimmedSSID.length > 32) {
+    return { isValid: false, error: 'Network name too long (max 32 characters)' };
+  }
+
+  // Password validation (only for secured networks)
+  if (security !== 'nopass') {
+    if (!password || typeof password !== 'string') {
+      return { isValid: false, error: 'Password is required for secured networks' };
+    }
+
+    const trimmedPassword = password.trim();
+    if (trimmedPassword.length === 0) {
+      return { isValid: false, error: 'Password cannot be empty' };
+    }
+
+    if (security === 'WPA' && trimmedPassword.length < 8) {
+      return { isValid: false, error: 'WPA password must be at least 8 characters' };
+    }
+
+    if (security === 'WEP' && ![5, 13, 10, 26].includes(trimmedPassword.length)) {
+      return { isValid: false, error: 'WEP password must be 5, 10, 13, or 26 characters' };
+    }
+
+    if (trimmedPassword.length > 63) {
+      return { isValid: false, error: 'Password too long (max 63 characters)' };
+    }
+  }
+
+  return { isValid: true };
 };
 
 // Enhanced input sanitization with better handling
@@ -107,19 +239,17 @@ export const validateQRContent = (content: string, type: string): { isValid: boo
       break;
     case 'email':
       const emailContent = content.replace('mailto:', '');
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(emailContent)) {
-        return { isValid: false, error: 'Invalid email format' };
+      validation = validateEmail(emailContent);
+      if (validation.isValid) {
+        sanitized = `mailto:${emailContent}`;
       }
-      sanitized = `mailto:${sanitizeTextInput(emailContent, 100)}`;
       break;
     case 'phone':
       const phoneContent = content.replace('tel:', '');
-      const phoneRegex = /^\+?[1-9]\d{1,14}$/;
-      if (!phoneRegex.test(phoneContent.replace(/[\s-()]/g, ''))) {
-        return { isValid: false, error: 'Invalid phone number format' };
+      validation = validatePhone(phoneContent);
+      if (validation.isValid) {
+        sanitized = `tel:${phoneContent}`;
       }
-      sanitized = `tel:${sanitizeTextInput(phoneContent, 20)}`;
       break;
     default:
       sanitized = sanitizeTextInput(content);
