@@ -1,48 +1,104 @@
-
 /**
  * Enhanced security utility functions for input validation and sanitization
  */
 
-// Enhanced URL validation with more comprehensive security checks
+// Enhanced URL validation with proper protocol and domain checks
 export const validateURL = (url: string): { isValid: boolean; error?: string } => {
   if (!url || typeof url !== 'string') {
     return { isValid: false, error: 'URL is required' };
   }
 
-  // Remove whitespace and normalize
   const trimmedUrl = url.trim();
   
   if (trimmedUrl.length === 0) {
     return { isValid: false, error: 'URL cannot be empty' };
   }
 
-  // Check for maximum length to prevent DoS
   if (trimmedUrl.length > 2048) {
     return { isValid: false, error: 'URL is too long (max 2048 characters)' };
   }
 
+  // Check if it's just a number or purely numeric
+  if (/^\d+$/.test(trimmedUrl)) {
+    return { isValid: false, error: 'URL cannot be just a number' };
+  }
+
   try {
-    // Add protocol if missing
+    // Add protocol if missing, but only if it looks like a domain
     let urlToTest = trimmedUrl;
     if (!urlToTest.match(/^https?:\/\//i)) {
+      // Check if it at least contains a dot and valid domain structure
+      if (!trimmedUrl.includes('.') || trimmedUrl.split('.').length < 2) {
+        return { isValid: false, error: 'Invalid URL format - missing domain' };
+      }
       urlToTest = 'https://' + urlToTest;
     }
     
     const urlObject = new URL(urlToTest);
     
-    // Check for allowed protocols
-    const allowedProtocols = ['http:', 'https:', 'mailto:', 'tel:', 'sms:'];
+    // Check for allowed protocols only
+    const allowedProtocols = ['http:', 'https:'];
     if (!allowedProtocols.includes(urlObject.protocol)) {
-      return { isValid: false, error: 'Protocol not allowed' };
+      return { isValid: false, error: 'Only HTTP and HTTPS protocols are allowed' };
     }
 
-    // Enhanced suspicious pattern detection
+    // Validate hostname more strictly
+    const hostname = urlObject.hostname;
+    
+    // Must contain at least one dot
+    if (!hostname.includes('.')) {
+      return { isValid: false, error: 'Invalid domain - must contain a dot' };
+    }
+
+    // Check for valid domain structure (not just numbers)
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
+      // Allow IP addresses but validate them properly
+      const parts = hostname.split('.');
+      for (const part of parts) {
+        const num = parseInt(part, 10);
+        if (num < 0 || num > 255) {
+          return { isValid: false, error: 'Invalid IP address' };
+        }
+      }
+    } else {
+      // For domain names, validate structure
+      const domainParts = hostname.split('.');
+      
+      // Must have at least 2 parts (domain.tld)
+      if (domainParts.length < 2) {
+        return { isValid: false, error: 'Invalid domain structure' };
+      }
+
+      // Each part must be valid
+      for (const part of domainParts) {
+        if (part.length === 0) {
+          return { isValid: false, error: 'Invalid domain - empty part' };
+        }
+        
+        // Domain parts cannot be purely numeric (except for IP addresses handled above)
+        if (/^\d+$/.test(part)) {
+          return { isValid: false, error: 'Domain parts cannot be purely numeric' };
+        }
+        
+        // Must contain valid characters only
+        if (!/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?$/.test(part)) {
+          return { isValid: false, error: 'Invalid characters in domain' };
+        }
+      }
+
+      // TLD (last part) must be at least 2 characters and alphabetic
+      const tld = domainParts[domainParts.length - 1];
+      if (tld.length < 2 || !/^[a-zA-Z]+$/.test(tld)) {
+        return { isValid: false, error: 'Invalid top-level domain' };
+      }
+    }
+
+    // Check for suspicious patterns
     const suspiciousPatterns = [
       /javascript:/gi,
       /data:/gi,
       /vbscript:/gi,
       /file:/gi,
-      /ftp:/gi,
       /<script[^>]*>/gi,
       /on\w+\s*=/gi,
       /eval\s*\(/gi,
@@ -55,18 +111,13 @@ export const validateURL = (url: string): { isValid: boolean; error?: string } =
       }
     }
 
-    // Check for valid domain structure
-    if (urlObject.hostname.length < 4 || !urlObject.hostname.includes('.')) {
-      return { isValid: false, error: 'Invalid domain format' };
-    }
-
     return { isValid: true };
   } catch (error) {
     return { isValid: false, error: 'Invalid URL format' };
   }
 };
 
-// Email validation with comprehensive checks
+// Strict email validation
 export const validateEmail = (email: string): { isValid: boolean; error?: string } => {
   if (!email || typeof email !== 'string') {
     return { isValid: false, error: 'Email is required' };
@@ -82,11 +133,73 @@ export const validateEmail = (email: string): { isValid: boolean; error?: string
     return { isValid: false, error: 'Email is too long (max 254 characters)' };
   }
 
-  // Comprehensive email regex
-  const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+  // Check if it's just numbers
+  if (/^\d+$/.test(trimmedEmail)) {
+    return { isValid: false, error: 'Email cannot be just numbers' };
+  }
+
+  // Must contain exactly one @ symbol
+  const atCount = (trimmedEmail.match(/@/g) || []).length;
+  if (atCount !== 1) {
+    return { isValid: false, error: 'Email must contain exactly one @ symbol' };
+  }
+
+  // Split into local and domain parts
+  const [localPart, domainPart] = trimmedEmail.split('@');
   
-  if (!emailRegex.test(trimmedEmail)) {
+  if (!localPart || !domainPart) {
     return { isValid: false, error: 'Invalid email format' };
+  }
+
+  // Local part validation
+  if (localPart.length > 64) {
+    return { isValid: false, error: 'Email local part too long (max 64 characters)' };
+  }
+
+  // Local part cannot start or end with a dot
+  if (localPart.startsWith('.') || localPart.endsWith('.')) {
+    return { isValid: false, error: 'Email cannot start or end with a dot' };
+  }
+
+  // Local part cannot have consecutive dots
+  if (localPart.includes('..')) {
+    return { isValid: false, error: 'Email cannot have consecutive dots' };
+  }
+
+  // Local part character validation
+  if (!/^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+$/.test(localPart)) {
+    return { isValid: false, error: 'Email contains invalid characters' };
+  }
+
+  // Domain part validation - reuse URL domain validation logic
+  if (!domainPart.includes('.')) {
+    return { isValid: false, error: 'Email domain must contain a dot' };
+  }
+
+  const domainParts = domainPart.split('.');
+  if (domainParts.length < 2) {
+    return { isValid: false, error: 'Invalid email domain structure' };
+  }
+
+  // Each domain part validation
+  for (const part of domainParts) {
+    if (part.length === 0) {
+      return { isValid: false, error: 'Invalid email domain - empty part' };
+    }
+    
+    if (/^\d+$/.test(part)) {
+      return { isValid: false, error: 'Email domain parts cannot be purely numeric' };
+    }
+    
+    if (!/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?$/.test(part)) {
+      return { isValid: false, error: 'Invalid characters in email domain' };
+    }
+  }
+
+  // TLD validation
+  const tld = domainParts[domainParts.length - 1];
+  if (tld.length < 2 || !/^[a-zA-Z]+$/.test(tld)) {
+    return { isValid: false, error: 'Invalid email domain extension' };
   }
 
   // Check for suspicious patterns
@@ -105,7 +218,7 @@ export const validateEmail = (email: string): { isValid: boolean; error?: string
   return { isValid: true };
 };
 
-// Phone number validation with international support
+// Strict phone number validation
 export const validatePhone = (phone: string): { isValid: boolean; error?: string } => {
   if (!phone || typeof phone !== 'string') {
     return { isValid: false, error: 'Phone number is required' };
@@ -120,25 +233,41 @@ export const validatePhone = (phone: string): { isValid: boolean; error?: string
   // Remove common formatting characters for validation
   const cleanPhone = trimmedPhone.replace(/[\s\-\(\)\.]/g, '');
   
-  // Check for minimum and maximum length
-  if (cleanPhone.length < 7) {
+  // Must contain only digits and optional leading +
+  if (!/^\+?\d+$/.test(cleanPhone)) {
+    return { isValid: false, error: 'Phone number can only contain digits, spaces, dashes, parentheses, and optional + prefix' };
+  }
+
+  // Remove + for length checking
+  const digitsOnly = cleanPhone.replace(/^\+/, '');
+  
+  // Check length constraints
+  if (digitsOnly.length < 7) {
     return { isValid: false, error: 'Phone number too short (minimum 7 digits)' };
   }
   
-  if (cleanPhone.length > 15) {
+  if (digitsOnly.length > 15) {
     return { isValid: false, error: 'Phone number too long (maximum 15 digits)' };
   }
 
-  // Check if it contains only valid characters
-  const phoneRegex = /^\+?[0-9]+$/;
-  if (!phoneRegex.test(cleanPhone)) {
-    return { isValid: false, error: 'Phone number contains invalid characters' };
+  // Additional validation for common patterns
+  // Cannot be all the same digit
+  if (/^(.)\1+$/.test(digitsOnly)) {
+    return { isValid: false, error: 'Phone number cannot be all the same digit' };
   }
 
-  // International format validation (optional + followed by digits)
-  const internationalRegex = /^\+?[1-9]\d{6,14}$/;
-  if (!internationalRegex.test(cleanPhone)) {
-    return { isValid: false, error: 'Invalid phone number format' };
+  // Cannot be sequential numbers
+  const isSequential = (str: string) => {
+    for (let i = 1; i < str.length; i++) {
+      if (parseInt(str[i]) !== parseInt(str[i-1]) + 1) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  if (isSequential(digitsOnly) && digitsOnly.length > 5) {
+    return { isValid: false, error: 'Phone number cannot be sequential digits' };
   }
 
   return { isValid: true };
