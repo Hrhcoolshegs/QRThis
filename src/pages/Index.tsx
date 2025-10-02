@@ -2,7 +2,7 @@
 import React from 'react';
 import { ThemeProvider } from '@/hooks/useTheme';
 import { Navigation } from '@/components/Navigation';
-import { QRGenerator } from '@/components/QRGenerator';
+import { QRGeneratorNew } from '@/components/QRGeneratorNew';
 import { MobileSecurityProvider } from '@/components/MobileSecurityProvider';
 import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
 import { Link } from 'react-router-dom';
@@ -24,28 +24,62 @@ function QRThisApp() {
         <Navigation />
 
         <main className="container max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-          {/* Mobile-First Hero Section */}
-          <section className={`${isMobile ? 'py-8' : 'py-16'} text-center`}>
-            <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-              <div className="space-y-3 sm:space-y-4">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-                  <span className="text-gray-900 dark:text-white/90 block sm:inline">Create QR Codes</span>
-                  <br className="hidden sm:block" />
-                  <span className="bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-blue-400 dark:via-purple-400 dark:to-cyan-400 bg-clip-text text-transparent block sm:inline">
-                    Instantly
+          {/* Enhanced Hero Section */}
+          <section className={`${isMobile ? 'py-12' : 'py-20'} text-center relative overflow-hidden`}>
+            {/* Background decoration */}
+            <div className="absolute inset-0 -z-10 overflow-hidden">
+              <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-pulse-glow" />
+              <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse-glow" style={{ animationDelay: '1s' }} />
+            </div>
+            
+            <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 relative">
+              <div className="space-y-4 sm:space-y-6">
+                {/* Badge */}
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm animate-fade-in-up">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+                  </span>
+                  <span className="text-sm font-medium text-primary">AI-Powered QR Generator</span>
+                </div>
+                
+                {/* Main heading */}
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-tight animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+                  <span className="block text-foreground">Create Perfect</span>
+                  <span className="block bg-gradient-to-r from-primary via-primary-glow to-accent bg-clip-text text-transparent mt-2">
+                    QR Codes Instantly
                   </span>
                 </h1>
                 
-                <p className="text-base sm:text-lg md:text-xl text-gray-700 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
-                  Type Anything. Get your QR Codes with AI precision
+                {/* Subtitle */}
+                <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4 sm:px-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+                  Professional QR codes in seconds. No signup required. Completely free.
                 </p>
+                
+                {/* Stats */}
+                <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 pt-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+                  <div className="text-center">
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">∞</div>
+                    <div className="text-sm text-muted-foreground">Unlimited QR Codes</div>
+                  </div>
+                  <div className="w-px h-12 bg-border" />
+                  <div className="text-center">
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">100%</div>
+                    <div className="text-sm text-muted-foreground">Free Forever</div>
+                  </div>
+                  <div className="w-px h-12 bg-border" />
+                  <div className="text-center">
+                    <div className="text-2xl sm:text-3xl font-bold text-foreground">0s</div>
+                    <div className="text-sm text-muted-foreground">Setup Time</div>
+                  </div>
+                </div>
               </div>
             </div>
           </section>
 
-          {/* Main QR Generator Section - Mobile Optimized */}
-          <section id="generator" className={`${isMobile ? 'py-4' : 'py-8'}`}>
-            <QRGenerator />
+          {/* Main QR Generator Section */}
+          <section id="generator" className={`${isMobile ? 'py-6' : 'py-12'}`}>
+            <QRGeneratorNew />
           </section>
         </main>
 

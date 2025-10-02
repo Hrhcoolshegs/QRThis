@@ -61,22 +61,22 @@ export function Navigation() {
   ];
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-smooth ${
       isScrolled 
-        ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl shadow-2xl border-b border-gray-200/50 dark:border-gray-700/50' 
-        : 'bg-white/40 dark:bg-gray-900/40 backdrop-blur-md'
+        ? 'bg-card/95 backdrop-blur-xl shadow-xl border-b border-border' 
+        : 'bg-card/60 backdrop-blur-md'
     }`}>
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-300 shadow-lg">
-              <span className="text-white font-bold text-lg">Q</span>
+            <div className="w-10 h-10 bg-gradient-to-br from-primary via-primary-hover to-accent rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-smooth shadow-lg">
+              <span className="text-primary-foreground font-bold text-lg">Q</span>
             </div>
             <div className="flex items-center space-x-2">
-              <span className="font-bold text-xl bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">QRThis</span>
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-xs px-2.5 py-1 rounded-full font-semibold shadow-sm">
-                AI-POWERED
+              <span className="font-bold text-xl bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">QRThis</span>
+              <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs px-2.5 py-1 rounded-full font-semibold shadow-sm">
+                AI
               </span>
             </div>
           </Link>
@@ -89,7 +89,7 @@ export function Navigation() {
                 <button
                   key={link.href}
                   onClick={link.onClick}
-                  className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-all duration-300 hover:scale-105 cursor-pointer group"
+                  className="flex items-center space-x-2 text-muted-foreground hover:text-primary font-medium transition-all duration-smooth hover:scale-105 cursor-pointer group"
                 >
                   <IconComponent className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
                   <span>{link.label}</span>
@@ -98,7 +98,7 @@ export function Navigation() {
                 <Link
                   key={link.href}
                   to={link.href}
-                  className="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 font-medium transition-all duration-300 hover:scale-105 group"
+                  className="flex items-center space-x-2 text-muted-foreground hover:text-primary font-medium transition-all duration-smooth hover:scale-105 group"
                 >
                   <IconComponent className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
                   <span>{link.label}</span>
@@ -107,11 +107,10 @@ export function Navigation() {
             })}
           </div>
 
-          {/* Desktop Actions */}
           <div className="hidden md:flex items-center space-x-4">
             <ThemeToggle />
             <Link to="/pricing">
-              <Button className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+              <Button className="bg-gradient-to-r from-primary via-primary-hover to-accent hover:shadow-glow text-primary-foreground shadow-lg transition-all duration-smooth hover:scale-105">
                 Get Pro
               </Button>
             </Link>
@@ -122,7 +121,7 @@ export function Navigation() {
             <ThemeToggle />
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="mobile-menu-container p-2 rounded-xl text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/80 transition-all duration-300 backdrop-blur-sm"
+              className="mobile-menu-container p-2 rounded-xl text-muted-foreground hover:bg-muted/50 transition-all duration-smooth backdrop-blur-sm"
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
@@ -134,17 +133,16 @@ export function Navigation() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden mobile-menu-container animate-fade-in">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-gray-200/50 dark:border-gray-700/50 shadow-2xl rounded-b-2xl">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-card/95 backdrop-blur-xl border-t border-border shadow-2xl rounded-b-2xl">
               {navLinks.map((link) => {
                 const IconComponent = link.icon;
                 return link.onClick ? (
                   <button
                     key={link.href}
                     onClick={link.onClick}
-                    className="flex items-center space-x-3 w-full text-left px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 rounded-xl transition-all duration-300"
+                    className="flex items-center space-x-3 w-full text-left px-4 py-3 text-base font-medium text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-all duration-smooth"
                   >
                     <IconComponent className="w-5 h-5" />
                     <span>{link.label}</span>
@@ -153,7 +151,7 @@ export function Navigation() {
                   <Link
                     key={link.href}
                     to={link.href}
-                    className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50/80 dark:hover:bg-gray-800/80 rounded-xl transition-all duration-300"
+                    className="flex items-center space-x-3 px-4 py-3 text-base font-medium text-muted-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-all duration-smooth"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <IconComponent className="w-5 h-5" />
@@ -166,7 +164,7 @@ export function Navigation() {
                   to="/pricing"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Button className="w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-700 hover:via-purple-700 hover:to-pink-700 text-white shadow-lg">
+                  <Button className="w-full bg-gradient-to-r from-primary via-primary-hover to-accent text-primary-foreground shadow-lg">
                     Get Pro
                   </Button>
                 </Link>
