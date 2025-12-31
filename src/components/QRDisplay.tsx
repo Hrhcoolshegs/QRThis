@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Download, Loader2, Sparkles, CheckCircle, Eye } from 'lucide-react';
+import { Loader2, Sparkles, CheckCircle, Eye } from 'lucide-react';
 import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
+import { DownloadOptions } from '@/components/DownloadOptions';
 
 interface QRDisplayProps {
   qrCodeDataURL: string;
@@ -12,7 +12,7 @@ interface QRDisplayProps {
   error: string | null;
   inputText: string;
   characterCount: number;
-  onDownload: () => void;
+  onDownload: (format: 'png' | 'jpg' | 'svg', size: number) => void;
 }
 
 function ScanReliabilityIndicator({ characterCount }: { characterCount: number }) {
@@ -238,14 +238,10 @@ export function QRDisplay({
             <ScanReliabilityIndicator characterCount={characterCount} />
           </div>
           
-          <Button
-            onClick={onDownload}
-            size="lg"
-            className="bg-gradient-to-r from-success to-success/80 hover:from-success/90 hover:to-success/70 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-          >
-            <Download className="w-5 h-5 mr-2" />
-            Download PNG
-          </Button>
+          <DownloadOptions 
+            qrCodeDataURL={qrCodeDataURL}
+            onDownload={onDownload}
+          />
           
           <p className="text-xs text-muted-foreground">
             High-resolution • Print-ready • Works everywhere
