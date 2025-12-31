@@ -10,11 +10,6 @@ interface UseQRGeneratorProps {
   optimizationDelay?: number;
 }
 
-interface QRColors {
-  foreground: string;
-  background: string;
-}
-
 interface UseQRGeneratorReturn {
   inputText: string;
   setInputText: (text: string) => void;
@@ -33,10 +28,6 @@ interface UseQRGeneratorReturn {
   handleUndoOptimization: () => void;
   characterCount: number;
   isOverLimit: boolean;
-  colors: QRColors;
-  setForegroundColor: (color: string) => void;
-  setBackgroundColor: (color: string) => void;
-  downloadQRCode: (format: 'png' | 'jpg' | 'svg', size: number) => void;
 }
 
 export function useQRGenerator({
@@ -55,15 +46,8 @@ export function useQRGenerator({
   const [savedChars, setSavedChars] = useState(0);
   const [personalizedTips, setPersonalizedTips] = useState<string[]>([]);
   const [lastTypingTime, setLastTypingTime] = useState<number>(0);
-  const [foregroundColor, setForegroundColor] = useState('#000000');
-  const [backgroundColor, setBackgroundColor] = useState('#FFFFFF');
   
   const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  const colors = useMemo(() => ({
-    foreground: foregroundColor,
-    background: backgroundColor
-  }), [foregroundColor, backgroundColor]);
 
   // Memoized computed values for better performance
   const contentType = useMemo(() => detectContentType(inputText), [inputText]);
@@ -95,15 +79,15 @@ export function useQRGenerator({
         }
 
         const dataURL = await QRCode.toDataURL(validation.sanitized || inputText, {
-          errorCorrectionLevel: 'L',
+          errorCorrectionLevel: 'L', // Lower quality for faster preview
           type: 'image/png',
           quality: 0.7,
           margin: 2,
           color: {
-            dark: foregroundColor,
-            light: backgroundColor
+            dark: '#000000',
+            light: '#FFFFFF'
           },
-          width: 256
+          width: 256 // Smaller for preview
         });
         setPreviewDataURL(dataURL);
       } catch (err) {
@@ -178,14 +162,17 @@ export function useQRGenerator({
         quality: 0.92,
         margin: 2,
         color: {
-          dark: foregroundColor,
-          light: backgroundColor
+          dark: '#000000',
+          light: '#FFFFFF'
         },
         width: 512
       });
       setQrCodeDataURL(dataURL);
       
+      // Track usage for analytics
       trackUsage(text, contentType);
+      
+      // Update personalized tips only when needed
       setPersonalizedTips(getPersonalizedTips());
       
     } catch (err) {
@@ -195,62 +182,7 @@ export function useQRGenerator({
     } finally {
       setIsGenerating(false);
     }
-  }, [errorCorrectionLevel, contentType, maxCharacters, foregroundColor, backgroundColor]);
-
-  const downloadQRCode = useCallback(async (format: 'png' | 'jpg' | 'svg', size: number) => {
-    if (!inputText.trim()) return;
-
-    try {
-      const validation = validateQRContent(inputText, detectContentType(inputText));
-      const content = validation.sanitized || inputText;
-
-      if (format === 'svg') {
-        const svgString = await QRCode.toString(content, {
-          type: 'svg',
-          errorCorrectionLevel: errorCorrectionLevel,
-          margin: 2,
-          color: {
-            dark: foregroundColor,
-            light: backgroundColor
-          },
-          width: size
-        });
-        
-        const blob = new Blob([svgString], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `qrthis-${Date.now()}.svg`;
-        link.href = url;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      } else {
-        const canvas = document.createElement('canvas');
-        await QRCode.toCanvas(canvas, content, {
-          errorCorrectionLevel: errorCorrectionLevel,
-          margin: 2,
-          color: {
-            dark: foregroundColor,
-            light: backgroundColor
-          },
-          width: size
-        });
-
-        const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
-        const dataURL = canvas.toDataURL(mimeType, 0.92);
-        
-        const link = document.createElement('a');
-        link.download = `qrthis-${Date.now()}.${format}`;
-        link.href = dataURL;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
-    } catch (err) {
-      console.error('Download failed:', err);
-    }
-  }, [inputText, errorCorrectionLevel, foregroundColor, backgroundColor]);
+  }, [errorCorrectionLevel, contentType, maxCharacters]);
 
   const handleUndoOptimization = useCallback(() => {
     if (originalText) {
@@ -288,10 +220,6 @@ export function useQRGenerator({
     generateQRCode,
     handleUndoOptimization,
     characterCount,
-    isOverLimit,
-    colors,
-    setForegroundColor,
-    setBackgroundColor,
-    downloadQRCode
+    isOverLimit
   };
 }

@@ -2,7 +2,6 @@ import React, { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QRInputNew } from '@/components/QRInputNew';
 import { QRDisplay } from '@/components/QRDisplay';
-import { ColorCustomizer } from '@/components/ColorCustomizer';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
 
@@ -27,20 +26,24 @@ export function QRGeneratorNew() {
     generateQRCode,
     handleUndoOptimization,
     characterCount,
-    isOverLimit,
-    colors,
-    setForegroundColor,
-    setBackgroundColor,
-    downloadQRCode
+    isOverLimit
   } = useQRGenerator({ maxCharacters: MAX_CHARACTERS });
 
-  const handleDownload = useCallback((format: 'png' | 'jpg' | 'svg' = 'png', size: number = 512) => {
-    downloadQRCode(format, size);
+  const handleDownload = useCallback(() => {
+    if (!qrCodeDataURL) return;
+
+    const link = document.createElement('a');
+    link.download = `qrthis-${Date.now()}.png`;
+    link.href = qrCodeDataURL;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
     toast({
       title: "Success!",
-      description: `Your QR code has been downloaded as ${format.toUpperCase()}`,
+      description: "Your QR code has been downloaded",
     });
-  }, [downloadQRCode, toast]);
+  }, [qrCodeDataURL, toast]);
 
   return (
     <div className="w-full max-w-7xl mx-auto relative">
@@ -78,14 +81,6 @@ export function QRGeneratorNew() {
               onUndoOptimization={handleUndoOptimization}
               contentType={contentType}
               errorCorrectionLevel={errorCorrectionLevel}
-            />
-
-            {/* Color Customizer */}
-            <ColorCustomizer
-              foregroundColor={colors.foreground}
-              backgroundColor={colors.background}
-              onForegroundChange={setForegroundColor}
-              onBackgroundChange={setBackgroundColor}
             />
 
             {/* Optimization badge */}
