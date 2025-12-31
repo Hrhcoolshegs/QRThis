@@ -5,14 +5,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Art style prompts designed to preserve QR scannability
+// Art style prompts - generate artistic BACKGROUNDS only, we'll overlay the real QR
 const stylePrompts: Record<string, string> = {
-  watercolor: "Create an artistic QR code with a beautiful watercolor painting style background. Use soft, flowing brush strokes with pastel colors (soft pinks, blues, purples). The QR code pattern should remain clearly visible and scannable with high contrast black modules on a light watercolor wash background. Add subtle paint splatter effects around the edges.",
-  minimalist: "Create a minimalist QR code design with clean geometric patterns. Use a crisp white background with the QR modules in pure black. Add subtle geometric shapes (circles, triangles, lines) as decorative elements around the QR code. The design should be modern, elegant, and the QR code must remain perfectly scannable.",
-  cyberpunk: "Create a cyberpunk-styled QR code with neon glow effects. Use a dark background (deep purple or dark blue) with the QR modules glowing in bright cyan/neon pink. Add circuit board patterns and digital grid lines as background elements. Include subtle neon light reflections. The QR code must remain clearly scannable despite the glow effects.",
-  vintage: "Create a vintage-styled QR code with a sepia-toned aesthetic. Use an aged paper or parchment texture as background. The QR modules should be in dark brown/sepia. Add ornate decorative borders and vintage flourishes around the QR code. Include subtle coffee stain effects. The QR code must remain clearly scannable.",
-  corporate: "Create a professional corporate-styled QR code. Use a clean gradient background (subtle blue to purple). The QR modules should be crisp and dark. Add modern geometric accents and subtle brand-appropriate patterns. The design should look sleek while keeping the QR code perfectly scannable.",
-  nature: "Create a nature-themed QR code with organic botanical elements. Use soft green and earth tones as background. Add subtle leaf patterns, vine decorations, and natural textures around the edges. The QR modules should be in dark forest green or brown on a light natural background. The QR code must remain clearly scannable."
+  watercolor: "Create a beautiful square artistic background with soft watercolor painting style. Use flowing brush strokes with pastel colors (soft pinks, blues, purples, greens). Include subtle paint splatter effects and color gradients. The center area should be slightly lighter to allow content placement. No text or QR codes - just a pure artistic watercolor background.",
+  minimalist: "Create a clean minimalist square background design with subtle geometric patterns. Use a crisp white or light gray background with very subtle geometric shapes (circles, triangles, thin lines) as decorative elements around the edges. The center should remain clean and uncluttered. Modern and elegant aesthetic. No text or QR codes.",
+  cyberpunk: "Create a cyberpunk-styled square background with neon glow effects. Use a dark background (deep purple or dark blue) with glowing neon accents in cyan and pink. Add circuit board patterns and digital grid lines. Include subtle neon light reflections around the edges. The center should be darker for content placement. No text or QR codes.",
+  vintage: "Create a vintage-styled square background with a sepia-toned aesthetic. Use an aged paper or parchment texture. Add ornate decorative borders and vintage flourishes around the edges. Include subtle coffee stain effects and weathered textures. The center should be cleaner for content placement. No text or QR codes.",
+  corporate: "Create a professional corporate-styled square background. Use a clean gradient (subtle blue to purple or teal to blue). Add modern geometric accents and subtle professional patterns around the edges. Keep the center area clean and minimal. Sleek and professional look. No text or QR codes.",
+  nature: "Create a nature-themed square background with organic botanical elements. Use soft green and earth tones. Add subtle leaf patterns, vine decorations, and natural textures around the edges. Include organic shapes and botanical illustrations. The center should be lighter for content placement. No text or QR codes."
 };
 
 serve(async (req) => {
@@ -22,9 +22,9 @@ serve(async (req) => {
   }
 
   try {
-    const { content, style } = await req.json();
+    const { content, style, qrCodeDataUrl } = await req.json();
     
-    console.log('Generating AI Art QR:', { content: content?.substring(0, 50), style });
+    console.log('Generating AI Art QR:', { content: content?.substring(0, 50), style, hasQrCode: !!qrCodeDataUrl });
 
     if (!content || typeof content !== 'string') {
       return new Response(
@@ -49,8 +49,76 @@ serve(async (req) => {
       );
     }
 
-    // Create the prompt for image generation
-    const prompt = `${stylePrompts[style]} The QR code should encode the following text: "${content.substring(0, 100)}". Make sure the QR code is functional and scannable. The image should be square (1:1 aspect ratio) and high quality.`;
+    // Generate artistic background
+    const backgroundPrompt = `${stylePrompts[style]} The image should be exactly 512x512 pixels, high quality, artistic.`;
+
+    console.log('Generating artistic background...');
+
+    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'google/gemini-2.5-flash-image-preview',
+        messages: [
+          {
+            role: 'user',
+            content: backgroundPrompt
+          }
+        ],
+        modalities: ['image', 'text']
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('AI Gateway error:', response.status, errorText);
+      
+      if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (response.status === 402) {
+        return new Response(
+          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate background' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const data = await response.json();
+    const backgroundImage = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    
+    if (!backgroundImage) {
+      console.error('No image in response:', JSON.stringify(data).substring(0, 500));
+      return new Response(
+        JSON.stringify({ error: 'No background was generated. Please try again.' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('Background generated, returning with QR overlay instructions');
+
+    // Return both the background and the original QR code data
+    // The frontend will handle compositing them together
+    return new Response(
+      JSON.stringify({ 
+        backgroundUrl: backgroundImage,
+        qrCodeDataUrl: qrCodeDataUrl,
+        style: style,
+        message: 'Background generated successfully. QR code will be overlaid on the client side for guaranteed scannability.'
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
 
     console.log('Sending request to AI gateway for image generation...');
 

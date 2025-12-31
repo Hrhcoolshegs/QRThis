@@ -168,32 +168,32 @@ export function QRInputNew({
   const renderInput = () => {
     if (activeType === 'wifi') {
       return (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">Network Name (SSID)</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Network Name (SSID)</label>
             <Input
               value={formData.ssid || ''}
               onChange={(e) => handleFieldChange('ssid', e.target.value)}
               placeholder="My WiFi Network"
-              className="h-12"
+              className="h-11 sm:h-12"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">Password</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Password</label>
             <Input
               type="password"
               value={formData.password || ''}
               onChange={(e) => handleFieldChange('password', e.target.value)}
               placeholder="Enter password"
-              className="h-12"
+              className="h-11 sm:h-12"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">Security Type</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Security Type</label>
             <select
               value={formData.security || 'WPA'}
               onChange={(e) => handleFieldChange('security', e.target.value)}
-              className="w-full h-12 px-4 border border-input rounded-lg bg-background"
+              className="w-full h-11 sm:h-12 px-3 sm:px-4 border border-input rounded-lg bg-background text-foreground text-sm"
             >
               <option value="WPA">WPA/WPA2</option>
               <option value="WEP">WEP</option>
@@ -206,43 +206,43 @@ export function QRInputNew({
 
     if (activeType === 'contact') {
       return (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">Full Name *</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Full Name *</label>
             <Input
               value={formData.name || ''}
               onChange={(e) => handleFieldChange('name', e.target.value)}
               placeholder="John Doe"
-              className="h-12"
+              className="h-11 sm:h-12"
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2">Phone</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Phone</label>
               <Input
                 value={formData.phone || ''}
                 onChange={(e) => handleFieldChange('phone', e.target.value)}
                 placeholder="+1 555 123 4567"
-                className="h-12"
+                className="h-11 sm:h-12"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-foreground mb-2">Email</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Email</label>
               <Input
                 value={formData.email || ''}
                 onChange={(e) => handleFieldChange('email', e.target.value)}
                 placeholder="john@example.com"
-                className="h-12"
+                className="h-11 sm:h-12"
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-2">Organization</label>
+            <label className="block text-sm font-medium text-foreground mb-1.5 sm:mb-2">Organization</label>
             <Input
               value={formData.organization || ''}
               onChange={(e) => handleFieldChange('organization', e.target.value)}
               placeholder="Company Name (optional)"
-              className="h-12"
+              className="h-11 sm:h-12"
             />
           </div>
         </div>
@@ -262,7 +262,7 @@ export function QRInputNew({
           value={inputText}
           onChange={(e) => onInputChange(e.target.value)}
           placeholder={placeholders[activeType]}
-          className="w-full h-32 p-4 border-2 border-input rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-ring transition-all bg-background text-foreground"
+          className="w-full h-28 sm:h-32 p-3 sm:p-4 border-2 border-input rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-ring transition-all bg-background text-foreground text-sm sm:text-base"
           maxLength={maxCharacters}
         />
       );
@@ -273,7 +273,7 @@ export function QRInputNew({
         value={inputText}
         onChange={(e) => onInputChange(e.target.value)}
         placeholder={placeholders[activeType]}
-        className="h-14 text-lg"
+        className="h-12 sm:h-14 text-base sm:text-lg"
       />
     );
   };
@@ -295,16 +295,16 @@ export function QRInputNew({
   const ButtonIcon = buttonState.icon;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       {/* Type Selector */}
       <div>
-        <h3 className="text-sm font-semibold text-foreground mb-3">Choose QR Type</h3>
+        <h3 className="text-sm font-semibold text-foreground mb-2.5 sm:mb-3">Choose QR Type</h3>
         <TypeSelector selectedType={activeType} onTypeChange={handleTypeChange} />
       </div>
 
       {/* Input Field */}
       <div>
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
           <h3 className="text-sm font-semibold text-foreground">Enter Content</h3>
           {inputText && (
             <span className={`text-xs font-medium ${isOverLimit ? 'text-destructive' : 'text-muted-foreground'}`}>
@@ -316,14 +316,14 @@ export function QRInputNew({
         
         {/* Validation feedback */}
         {validationError && inputText && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-destructive">
-            <AlertCircle className="w-4 h-4" />
+          <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-destructive">
+            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             <span>{validationError}</span>
           </div>
         )}
         {isValid && inputText && (
-          <div className="mt-2 flex items-center gap-2 text-sm text-success">
-            <CheckCircle className="w-4 h-4" />
+          <div className="mt-2 flex items-center gap-2 text-xs sm:text-sm text-success">
+            <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             <span>Ready to generate</span>
           </div>
         )}
@@ -335,9 +335,9 @@ export function QRInputNew({
           onClick={handleGenerate}
           disabled={buttonState.disabled}
           variant={buttonState.variant}
-          className="w-full h-14 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-smooth hover:scale-[1.02] disabled:hover:scale-100"
+          className="w-full h-12 sm:h-14 text-base sm:text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-smooth hover:scale-[1.02] disabled:hover:scale-100"
         >
-          <ButtonIcon className={`w-5 h-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+          <ButtonIcon className={`w-4 h-4 sm:w-5 sm:h-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
           {buttonState.text}
         </Button>
       )}
