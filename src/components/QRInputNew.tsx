@@ -19,6 +19,7 @@ interface QRInputNewProps {
   onUndoOptimization: () => void;
   contentType: string;
   errorCorrectionLevel: string;
+  hideGenerateButton?: boolean;
 }
 
 interface FormData {
@@ -33,6 +34,7 @@ export function QRInputNew({
   isOverLimit,
   characterCount,
   maxCharacters,
+  hideGenerateButton = false,
 }: QRInputNewProps) {
   const { toast } = useToast();
   const [isValid, setIsValid] = useState(false);
@@ -328,15 +330,17 @@ export function QRInputNew({
       </div>
 
       {/* Generate Button */}
-      <Button
-        onClick={handleGenerate}
-        disabled={buttonState.disabled}
-        variant={buttonState.variant}
-        className="w-full h-14 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-smooth hover:scale-[1.02] disabled:hover:scale-100"
-      >
-        <ButtonIcon className={`w-5 h-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
-        {buttonState.text}
-      </Button>
+      {!hideGenerateButton && (
+        <Button
+          onClick={handleGenerate}
+          disabled={buttonState.disabled}
+          variant={buttonState.variant}
+          className="w-full h-14 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-smooth hover:scale-[1.02] disabled:hover:scale-100"
+        >
+          <ButtonIcon className={`w-5 h-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+          {buttonState.text}
+        </Button>
+      )}
     </div>
   );
 }

@@ -1,11 +1,9 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { Loader2, CheckCircle, Sparkles, Shield } from 'lucide-react';
+import { Loader2, Sparkles, Shield } from 'lucide-react';
 import { validateEmail, validatePhone, validateName, isRateLimited } from '@/utils/validationUtils';
 
 interface SecureNotificationFormProps {
@@ -75,42 +73,33 @@ export function SecureNotificationForm({ feature, onSuccess }: SecureNotificatio
     try {
       // Validate and sanitize inputs
       const emailValidation = validateEmail(formData.email);
-      const phoneValidation = validatePhone(formData.phone);
       const nameValidation = validateName(formData.name);
 
       if (!emailValidation.isValid) {
         throw new Error(emailValidation.error);
       }
 
-      const { error } = await supabase
-        .from('qrthis_notifications')
-        .insert({
-          email: emailValidation.sanitized!,
-          phone_number: phoneValidation.sanitized || null,
-          name: nameValidation.sanitized || null,
-          feature_requested: feature,
-          user_agent: navigator.userAgent,
+      // Store in localStorage for now (will be moved to database later)
+      const notifications = JSON.parse(localStorage.getItem('qrthis_notifications') || '[]');
+      const existingEntry = notifications.find((n: { email: string; feature: string }) => 
+        n.email === emailValidation.sanitized && n.feature === feature
+      );
+      
+      if (existingEntry) {
+        toast({
+          title: "Already Registered",
+          description: "You've already requested notifications for this feature.",
+          variant: "destructive",
         });
-
-      if (error) {
-        if (error.message.includes('Duplicate notification request')) {
-          toast({
-            title: "Already Registered",
-            description: "You've already requested notifications for this feature recently.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('Rate limit exceeded')) {
-          toast({
-            title: "Rate limit exceeded",
-            description: "You've made too many requests today. Please try again tomorrow.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('Invalid email format')) {
-          setErrors({ email: 'Please enter a valid email address' });
-        } else {
-          throw error;
-        }
       } else {
+        notifications.push({
+          email: emailValidation.sanitized,
+          name: nameValidation.sanitized || null,
+          feature: feature,
+          timestamp: new Date().toISOString()
+        });
+        localStorage.setItem('qrthis_notifications', JSON.stringify(notifications));
+        
         onSuccess();
         setFormData({ name: '', email: '', phone: '' });
         toast({
