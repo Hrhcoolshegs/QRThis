@@ -1,5 +1,4 @@
-
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import QRCode from 'qrcode';
 import { optimizeText, detectContentType, getOptimalErrorCorrection } from '@/utils/smartOptimization';
 import { trackUsage, getPersonalizedTips } from '@/utils/analytics';
@@ -16,7 +15,9 @@ interface UseQRGeneratorReturn {
   setInputText: (text: string) => void;
   originalText: string;
   qrCodeDataURL: string;
+  previewDataURL: string;
   isGenerating: boolean;
+  isPreviewGenerating: boolean;
   error: string | null;
   optimizationShown: boolean;
   savedChars: number;
@@ -31,24 +32,78 @@ interface UseQRGeneratorReturn {
 
 export function useQRGenerator({
   maxCharacters = 2000,
-  debounceDelay = 300,
+  debounceDelay = 400,
   optimizationDelay = 5000
 }: UseQRGeneratorProps = {}): UseQRGeneratorReturn {
   const [inputText, setInputText] = useState('');
   const [originalText, setOriginalText] = useState('');
   const [qrCodeDataURL, setQrCodeDataURL] = useState<string>('');
+  const [previewDataURL, setPreviewDataURL] = useState<string>('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isPreviewGenerating, setIsPreviewGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [optimizationShown, setOptimizationShown] = useState(false);
   const [savedChars, setSavedChars] = useState(0);
   const [personalizedTips, setPersonalizedTips] = useState<string[]>([]);
   const [lastTypingTime, setLastTypingTime] = useState<number>(0);
+  
+  const previewTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Memoized computed values for better performance
   const contentType = useMemo(() => detectContentType(inputText), [inputText]);
   const errorCorrectionLevel = useMemo(() => getOptimalErrorCorrection(inputText), [inputText]);
   const characterCount = useMemo(() => inputText.length, [inputText]);
   const isOverLimit = useMemo(() => characterCount > maxCharacters, [characterCount, maxCharacters]);
+
+  // Debounced preview generation
+  useEffect(() => {
+    if (previewTimeoutRef.current) {
+      clearTimeout(previewTimeoutRef.current);
+    }
+
+    if (!inputText.trim() || isOverLimit) {
+      setPreviewDataURL('');
+      setIsPreviewGenerating(false);
+      return;
+    }
+
+    setIsPreviewGenerating(true);
+
+    previewTimeoutRef.current = setTimeout(async () => {
+      try {
+        const validation = validateQRContent(inputText, detectContentType(inputText));
+        if (!validation.isValid) {
+          setPreviewDataURL('');
+          setIsPreviewGenerating(false);
+          return;
+        }
+
+        const dataURL = await QRCode.toDataURL(validation.sanitized || inputText, {
+          errorCorrectionLevel: 'L', // Lower quality for faster preview
+          type: 'image/png',
+          quality: 0.7,
+          margin: 2,
+          color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+          },
+          width: 256 // Smaller for preview
+        });
+        setPreviewDataURL(dataURL);
+      } catch (err) {
+        console.error('Preview generation failed:', err);
+        setPreviewDataURL('');
+      } finally {
+        setIsPreviewGenerating(false);
+      }
+    }, debounceDelay);
+
+    return () => {
+      if (previewTimeoutRef.current) {
+        clearTimeout(previewTimeoutRef.current);
+      }
+    };
+  }, [inputText, isOverLimit, debounceDelay]);
 
   // Auto-optimization effect with better timing control
   useEffect(() => {
@@ -144,10 +199,8 @@ export function useQRGenerator({
     setError(null);
     setLastTypingTime(Date.now());
     
-    // Clear QR code when input changes but don't auto-generate
-    if (!text.trim()) {
-      setQrCodeDataURL('');
-    }
+    // Clear final QR code when input changes
+    setQrCodeDataURL('');
   }, []);
 
   return {
@@ -155,7 +208,9 @@ export function useQRGenerator({
     setInputText: handleInputChange,
     originalText,
     qrCodeDataURL,
+    previewDataURL,
     isGenerating,
+    isPreviewGenerating,
     error,
     optimizationShown,
     savedChars,
