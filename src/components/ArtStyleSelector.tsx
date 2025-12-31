@@ -1,6 +1,6 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
-import { Palette, Minimize2, Zap, Clock, Building2, Leaf } from 'lucide-react';
+import { Palette, Minimize2, Zap, Clock, Building2, Leaf, Grid3X3, Sparkles, PenTool } from 'lucide-react';
 
 export interface ArtStyle {
   id: string;
@@ -52,6 +52,27 @@ const artStyles: ArtStyle[] = [
     description: 'Organic botanical vibes',
     icon: <Leaf className="w-5 h-5" />,
     gradient: 'from-green-400 via-emerald-500 to-teal-500',
+  },
+  {
+    id: 'pixel',
+    name: 'Pixel Art',
+    description: '8-bit retro gaming style',
+    icon: <Grid3X3 className="w-5 h-5" />,
+    gradient: 'from-red-400 via-yellow-400 to-green-400',
+  },
+  {
+    id: 'anime',
+    name: 'Anime',
+    description: 'Japanese animation style',
+    icon: <Sparkles className="w-5 h-5" />,
+    gradient: 'from-pink-400 via-rose-400 to-red-400',
+  },
+  {
+    id: 'graffiti',
+    name: 'Graffiti',
+    description: 'Urban street art vibes',
+    icon: <PenTool className="w-5 h-5" />,
+    gradient: 'from-yellow-400 via-orange-500 to-red-500',
   },
 ];
 
