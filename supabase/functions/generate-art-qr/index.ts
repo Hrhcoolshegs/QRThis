@@ -106,85 +106,15 @@ serve(async (req) => {
       );
     }
 
-    console.log('Background generated, returning with QR overlay instructions');
+    console.log('Background generated successfully');
 
-    // Return both the background and the original QR code data
-    // The frontend will handle compositing them together
+    // Return background URL - frontend will composite with QR code
     return new Response(
       JSON.stringify({ 
         backgroundUrl: backgroundImage,
         qrCodeDataUrl: qrCodeDataUrl,
         style: style,
-        message: 'Background generated successfully. QR code will be overlaid on the client side for guaranteed scannability.'
-      }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
-
-    console.log('Sending request to AI gateway for image generation...');
-
-    // Call Lovable AI Gateway with image generation model
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash-image-preview',
-        messages: [
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        modalities: ['image', 'text']
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('AI Gateway error:', response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'AI credits exhausted. Please add credits to continue.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-      
-      return new Response(
-        JSON.stringify({ error: 'Failed to generate image' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await response.json();
-    console.log('AI Gateway response received');
-
-    // Extract the image from the response
-    const imageData = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-    
-    if (!imageData) {
-      console.error('No image in response:', JSON.stringify(data).substring(0, 500));
-      return new Response(
-        JSON.stringify({ error: 'No image was generated. Please try again.' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    console.log('Successfully generated AI Art QR code');
-
-    return new Response(
-      JSON.stringify({ 
-        imageUrl: imageData,
-        style: style,
-        message: 'AI Art QR code generated successfully'
+        message: 'Background generated successfully'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
