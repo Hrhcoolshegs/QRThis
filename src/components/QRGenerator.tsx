@@ -24,7 +24,9 @@ export function QRGenerator() {
     inputText,
     setInputText,
     qrCodeDataURL,
+    previewDataURL,
     isGenerating,
+    isPreviewGenerating,
     error,
     optimizationShown,
     savedChars,
@@ -34,24 +36,17 @@ export function QRGenerator() {
     generateQRCode,
     handleUndoOptimization,
     characterCount,
-    isOverLimit
+    isOverLimit,
+    downloadQRCode
   } = useQRGenerator({ maxCharacters: MAX_CHARACTERS });
 
-  const handleDownload = useCallback(() => {
-    if (!qrCodeDataURL) return;
-
-    const link = document.createElement('a');
-    link.download = `qrthis-ai-${Date.now()}.png`;
-    link.href = qrCodeDataURL;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
+  const handleDownload = useCallback((format: 'png' | 'svg' | 'jpg' = 'png', size: 256 | 512 | 1024 | 2048 = 512) => {
+    downloadQRCode(format, size);
     toast({
       title: "QR Code Downloaded",
       description: "Your QR code has been saved successfully!",
     });
-  }, [qrCodeDataURL, toast]);
+  }, [downloadQRCode, toast]);
 
   const handleAIGenerated = useCallback((content: string) => {
     setInputText(content);
@@ -178,10 +173,13 @@ export function QRGenerator() {
           {/* Output Section */}
           <QRDisplay
             qrCodeDataURL={qrCodeDataURL}
+            previewDataURL={previewDataURL}
             isGenerating={isGenerating}
+            isPreviewGenerating={isPreviewGenerating}
             error={error}
             inputText={inputText}
             characterCount={characterCount}
+            errorCorrectionLevel={errorCorrectionLevel}
             onDownload={handleDownload}
           />
         </div>

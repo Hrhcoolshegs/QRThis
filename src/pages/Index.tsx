@@ -56,23 +56,6 @@ function QRThisApp() {
                   Professional QR codes in seconds. No signup required. Completely free.
                 </p>
                 
-                {/* Stats */}
-                <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 pt-4 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-foreground">∞</div>
-                    <div className="text-sm text-muted-foreground">Unlimited QR Codes</div>
-                  </div>
-                  <div className="w-px h-12 bg-border" />
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-foreground">100%</div>
-                    <div className="text-sm text-muted-foreground">Free Forever</div>
-                  </div>
-                  <div className="w-px h-12 bg-border" />
-                  <div className="text-center">
-                    <div className="text-2xl sm:text-3xl font-bold text-foreground">0s</div>
-                    <div className="text-sm text-muted-foreground">Setup Time</div>
-                  </div>
-                </div>
               </div>
             </div>
           </section>
