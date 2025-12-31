@@ -1,8 +1,7 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QRInputNew } from '@/components/QRInputNew';
 import { QRDisplay } from '@/components/QRDisplay';
-import { LivePreview } from '@/components/LivePreview';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
 
@@ -16,7 +15,9 @@ export function QRGeneratorNew() {
     inputText,
     setInputText,
     qrCodeDataURL,
+    previewDataURL,
     isGenerating,
+    isPreviewGenerating,
     error,
     optimizationShown,
     savedChars,
@@ -46,12 +47,6 @@ export function QRGeneratorNew() {
 
   return (
     <div className="w-full max-w-7xl mx-auto relative">
-      {/* Live Preview (Desktop only) */}
-      <LivePreview
-        qrCodeDataURL={qrCodeDataURL}
-        isGenerating={isGenerating}
-        inputText={inputText}
-      />
 
       {/* Main Content */}
       <div className="bg-card/80 backdrop-blur-xl rounded-3xl shadow-2xl border-2 border-border p-6 sm:p-8 md:p-12 animate-fade-in">
@@ -104,7 +99,9 @@ export function QRGeneratorNew() {
           {/* Output Section */}
           <QRDisplay
             qrCodeDataURL={qrCodeDataURL}
+            previewDataURL={previewDataURL}
             isGenerating={isGenerating}
+            isPreviewGenerating={isPreviewGenerating}
             error={error}
             inputText={inputText}
             characterCount={characterCount}
