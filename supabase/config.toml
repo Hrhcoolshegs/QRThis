@@ -1,1 +1,4 @@
-project_id = "lbkvwmkdifzuawomdhbz"
+project_id = "tmejymrikoinoqqngvca"
+
+[functions.generate-art-qr]
+verify_jwt = false
