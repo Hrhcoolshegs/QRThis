@@ -53,7 +53,7 @@ function QRThisApp() {
                 
                 {/* Subtitle */}
                 <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed px-4 sm:px-0 animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-                  Professional QR codes in seconds. No signup required. Completely free.
+                  Professional QR codes in seconds. No signup required.
                 </p>
                 
               </div>
