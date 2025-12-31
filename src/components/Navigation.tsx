@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Menu, X, Zap, Shield, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import logoImage from '/logo.png';
 
 export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -69,16 +70,15 @@ export function Navigation() {
       <div className="container max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary via-primary-hover to-accent rounded-xl flex items-center justify-center group-hover:scale-110 transition-all duration-smooth shadow-lg">
-              <span className="text-primary-foreground font-bold text-lg">Q</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span className="font-bold text-xl bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">QRThis</span>
-              <span className="bg-gradient-to-r from-primary to-accent text-primary-foreground text-xs px-2.5 py-1 rounded-full font-semibold shadow-sm">
-                AI
-              </span>
-            </div>
+          <Link to="/" className="flex items-center space-x-2.5 group">
+            <img 
+              src={logoImage} 
+              alt="QRThis Logo" 
+              className="w-10 h-10 rounded-xl group-hover:scale-110 transition-all duration-smooth shadow-lg"
+            />
+            <span className="font-bold text-xl bg-gradient-to-r from-foreground to-muted-foreground bg-clip-text text-transparent">
+              QRThis
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
