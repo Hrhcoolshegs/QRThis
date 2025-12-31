@@ -1,9 +1,11 @@
-import React, { useCallback } from 'react';
+import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { QRInputNew } from '@/components/QRInputNew';
 import { QRDisplay } from '@/components/QRDisplay';
+import { ColorCustomizer } from '@/components/ColorCustomizer';
 import { useQRGenerator } from '@/hooks/useQRGenerator';
 import { useMobileOptimizations } from '@/hooks/useMobileOptimizations';
+import type { DownloadFormat, DownloadSize } from '@/hooks/useQRGenerator';
 
 const MAX_CHARACTERS = 2000;
 
@@ -26,24 +28,22 @@ export function QRGeneratorNew() {
     generateQRCode,
     handleUndoOptimization,
     characterCount,
-    isOverLimit
+    isOverLimit,
+    foregroundColor,
+    backgroundColor,
+    setForegroundColor,
+    setBackgroundColor,
+    resetColors,
+    downloadQRCode
   } = useQRGenerator({ maxCharacters: MAX_CHARACTERS });
 
-  const handleDownload = useCallback(() => {
-    if (!qrCodeDataURL) return;
-
-    const link = document.createElement('a');
-    link.download = `qrthis-${Date.now()}.png`;
-    link.href = qrCodeDataURL;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
+  const handleDownload = (format: DownloadFormat, size: DownloadSize) => {
+    downloadQRCode(format, size);
     toast({
       title: "Success!",
-      description: "Your QR code has been downloaded",
+      description: `Your QR code has been downloaded as ${format.toUpperCase()}`,
     });
-  }, [qrCodeDataURL, toast]);
+  };
 
   return (
     <div className="w-full max-w-7xl mx-auto relative">
@@ -83,6 +83,15 @@ export function QRGeneratorNew() {
               errorCorrectionLevel={errorCorrectionLevel}
             />
 
+            {/* Color Customizer */}
+            <ColorCustomizer
+              foregroundColor={foregroundColor}
+              backgroundColor={backgroundColor}
+              onForegroundChange={setForegroundColor}
+              onBackgroundChange={setBackgroundColor}
+              onReset={resetColors}
+            />
+
             {/* Optimization badge */}
             {optimizationShown && savedChars > 0 && (
               <div className="p-4 bg-success/10 border border-success/20 rounded-xl animate-fade-in">
@@ -105,6 +114,7 @@ export function QRGeneratorNew() {
             error={error}
             inputText={inputText}
             characterCount={characterCount}
+            errorCorrectionLevel={errorCorrectionLevel}
             onDownload={handleDownload}
           />
         </div>
